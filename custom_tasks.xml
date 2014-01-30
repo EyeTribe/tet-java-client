@@ -1,0 +1,4 @@
+<?eclipse.ant.import ?>
+<project basedir="." name="custom">
+    <property name="env.ECLIPSE_HOME" value="/home/anders/Development/IDEs/eclipse"/>
+</project>
