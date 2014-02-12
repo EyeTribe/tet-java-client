@@ -30,5 +30,5 @@ public interface ITrackerStateListener
 	 * @param screenPhysicalWidth physical screen width in meters
 	 * @param screenPhysicalHeight physical screen height in meters
 	 */
-    void OnScreenStatesChanged(int screenIndex, int screenResolutionWidth, int screenResolutionHeight, float screenPhysicalWidth, float screenPhysicalHeight);
+	void OnScreenStatesChanged(int screenIndex, int screenResolutionWidth, int screenResolutionHeight, float screenPhysicalWidth, float screenPhysicalHeight);
 }

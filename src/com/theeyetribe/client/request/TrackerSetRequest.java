@@ -20,9 +20,9 @@ public class TrackerSetRequest extends RequestBase
 		@SerializedName(Protocol.TRACKER_SCREEN_PHYSICAL_HEIGHT)
 		public Float screenPhysicalHeight;
 	}
-	
+
 	public Values values = new Values();
-	
+
 	public TrackerSetRequest() 
 	{
 		this.category = Protocol.CATEGORY_TRACKER;

@@ -10,6 +10,6 @@ public class ReplyFailed extends ReplyBase
 		@SerializedName(Protocol.KEY_STATUSMESSAGE)
 		public String statusMessage;
 	}
-	
+
 	public Values values = new Values();
 }

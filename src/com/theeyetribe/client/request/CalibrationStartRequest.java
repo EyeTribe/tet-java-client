@@ -8,9 +8,9 @@ public class CalibrationStartRequest extends RequestBase
 	{
 		public Integer pointcount;
 	}
-	
+
 	public Values values = new Values();
-	
+
 	public CalibrationStartRequest()
 	{
 		this.category = Protocol.CATEGORY_CALIBRATION;

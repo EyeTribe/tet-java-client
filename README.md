@@ -40,5 +40,10 @@ The complete API specification used by the Java SDK to communicate with the serv
 Changelog
 ----
 
+0.9.27 (2014-02-12)
+- Fixed tab/space formatting
+- New methods to GazeUtils
+- Minor internal refactoring
+
 0.9.26 (2014-01-30)
 - Initial release

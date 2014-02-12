@@ -36,6 +36,6 @@ public class TrackerGetReply extends ReplyBase
 		public Integer frameRate;
 		public GazeData frame;
 	}
-	
+
 	public Values values = new Values();
 }

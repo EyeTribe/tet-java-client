@@ -17,5 +17,5 @@ public interface ICalibrationResultListener
 	 * @param isCalibrated is the Tracker Server calibrated?
 	 * @param calibResult if calibrated, the currently valid CalibrationResult, otherwise null
 	 */
-    public void onCalibrationChanged(boolean isCalibrated, CalibrationResult calibResult);
+	public void onCalibrationChanged(boolean isCalibrated, CalibrationResult calibResult);
 }
