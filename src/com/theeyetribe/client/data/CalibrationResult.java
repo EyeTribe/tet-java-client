@@ -7,8 +7,7 @@ import com.theeyetribe.client.Protocol;
  * CalibrationResult holds outcome of a calibration procedure. It defines if
  * calibration was successful or if certain calibration points needs resampling.
  */
-public class CalibrationResult
-{
+public class CalibrationResult {
 	/*
 	 * Was the calibration sucessful?
 	 */
@@ -37,8 +36,7 @@ public class CalibrationResult
 	 */
 	public CalibrationPoint[] calibpoints;
 
-	public class CalibrationPoint
-	{
+	public class CalibrationPoint {
 		/*
 		 * State defines that no data is available for calibration point
 		 */
@@ -79,8 +77,7 @@ public class CalibrationResult
 		public StandardDeviation standardDeviation = new StandardDeviation();
 	}
 
-	public class Accuracy
-	{
+	public class Accuracy {
 		/*
 		 * Accuracy in degrees
 		 */
@@ -100,8 +97,7 @@ public class CalibrationResult
 		public Double accuracyDegreesRight = 0d;
 	}
 
-	public class MeanError
-	{
+	public class MeanError {
 		/*
 		 * Mean error in pixels
 		 */
@@ -121,8 +117,7 @@ public class CalibrationResult
 		public Double meanErrorPixelsRight = 0d;
 	}
 
-	public class StandardDeviation
-	{
+	public class StandardDeviation {
 		/*
 		 * Average std deviation in pixels
 		 */

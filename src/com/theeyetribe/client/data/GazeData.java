@@ -4,11 +4,11 @@ import com.google.gson.annotations.SerializedName;
 import com.theeyetribe.client.Protocol;
 
 /**
- * Contains eye tracking results of a single frame. It holds a state that defines 
- * the quality of the current tracking and fine grained traking details down to eye level.
+ * Contains eye tracking results of a single frame. It holds a state that
+ * defines the quality of the current tracking and fine grained tracking details
+ * down to eye level.
  */
-public class GazeData
-{
+public class GazeData {
 	/**
 	 * Set when engine is calibrated and glint tracking successfully.
 	 */
@@ -30,7 +30,8 @@ public class GazeData
 	public static final int STATE_TRACKING_FAIL = 1 << 3;
 
 	/**
-	 * Set when tracking has failed consecutively over a period of time defined by enige.
+	 * Set when tracking has failed consecutively over a period of time defined
+	 * by engine.
 	 */
 	public static final int STATE_TRACKING_LOST = 1 << 4;
 
@@ -38,6 +39,9 @@ public class GazeData
 
 	@SerializedName(Protocol.FRAME_TIME)
 	public Long timeStamp = 0l;
+
+	@SerializedName(Protocol.FRAME_TIMESTAMP)
+	public String timeStampString;
 
 	@SerializedName(Protocol.FRAME_RAW_COORDINATES)
 	public Point2D rawCoordinates = new Point2D();
@@ -54,13 +58,11 @@ public class GazeData
 	@SerializedName(Protocol.FRAME_FIXATION)
 	public Boolean isFixated = false;
 
-	public GazeData()
-	{
+	public GazeData() {
 		timeStamp = System.currentTimeMillis();
 	}
 
-	public GazeData(GazeData other)
-	{
+	public GazeData(GazeData other) {
 		this.state = other.state;
 		this.timeStamp = other.timeStamp;
 
@@ -73,33 +75,31 @@ public class GazeData
 		this.isFixated = new Boolean(other.isFixated);
 	}
 
-	public GazeData clone()
-	{
+	public GazeData clone() {
 		return new GazeData(this);
 	}
 
 	@Override
-	public boolean equals(Object o) 
-	{	
-		if(o instanceof GazeData)
-		{
+	public boolean equals(Object o) {
+		if (o instanceof GazeData) {
 			GazeData other = (GazeData) o;
 
-			return 
-					this.state == other.state &&
-					this.timeStamp.longValue() == other.timeStamp.longValue() &&
-					this.rawCoordinates.equals(other.rawCoordinates) &&
-					this.smoothedCoordinates.equals(other.smoothedCoordinates) &&
-					this.leftEye.equals(other.leftEye) &&
-					this.rightEye.equals(other.rightEye) &&
-					this.isFixated.booleanValue() == other.isFixated.booleanValue();
+			return this.state == other.state
+					&& this.timeStamp.longValue() == other.timeStamp
+							.longValue()
+					&& this.rawCoordinates.equals(other.rawCoordinates)
+					&& this.smoothedCoordinates
+							.equals(other.smoothedCoordinates)
+					&& this.leftEye.equals(other.leftEye)
+					&& this.rightEye.equals(other.rightEye)
+					&& this.isFixated.booleanValue() == other.isFixated
+							.booleanValue();
 		}
 
 		return false;
 	}
 
-	public void set(GazeData other)
-	{
+	public void set(GazeData other) {
 		this.state = other.state;
 		this.timeStamp = other.timeStamp;
 
@@ -117,8 +117,7 @@ public class GazeData
 	/**
 	 * Contains tracking results of a single eye.
 	 */
-	 public class Eye
-	 {
+	public class Eye {
 		@SerializedName(Protocol.FRAME_RAW_COORDINATES)
 		public Point2D rawCoordinates = new Point2D();
 
@@ -131,33 +130,32 @@ public class GazeData
 		@SerializedName(Protocol.FRAME_PUPIL_SIZE)
 		public Double pupilSize = 0d;
 
-		public Eye() 
-		{
+		public Eye() {
 		}
 
-		public Eye(Eye other) 
-		{
+		public Eye(Eye other) {
 			this.rawCoordinates = new Point2D(other.rawCoordinates);
 			this.smoothedCoordinates = new Point2D(other.smoothedCoordinates);
-			this.pupilCenterCoordinates = new Point2D(other.pupilCenterCoordinates);
+			this.pupilCenterCoordinates = new Point2D(
+					other.pupilCenterCoordinates);
 			this.pupilSize = new Double(other.pupilSize);
 		}
 
 		@Override
-		public boolean equals(Object o) 
-		{	
-			if(o instanceof Eye)
-			{
+		public boolean equals(Object o) {
+			if (o instanceof Eye) {
 				Eye other = (Eye) o;
 
-				return 
-						this.rawCoordinates.equals(other.rawCoordinates) &&
-						this.smoothedCoordinates.equals(other.smoothedCoordinates) &&
-						this.pupilCenterCoordinates.equals(other.pupilCenterCoordinates) &&
-						this.pupilSize.doubleValue() == other.pupilSize.doubleValue();
+				return this.rawCoordinates.equals(other.rawCoordinates)
+						&& this.smoothedCoordinates
+								.equals(other.smoothedCoordinates)
+						&& this.pupilCenterCoordinates
+								.equals(other.pupilCenterCoordinates)
+						&& this.pupilSize.doubleValue() == other.pupilSize
+								.doubleValue();
 			}
 
 			return false;
 		}
-	 }
+	}
 }

@@ -24,30 +24,37 @@ import com.theeyetribe.client.request.TrackerGetRequest;
 import com.theeyetribe.client.request.TrackerSetRequest;
 
 /**
- * This class manages communication with the underlying Tracker Server using the Tracker API over TCP Sockets.
+ * This class manages communication with the underlying Tracker Server using the
+ * Tracker API over TCP Sockets.
  */
-public class GazeApiManager
-{
+public class GazeApiManager {
+	
 	static String DEFAULT_SERVER_HOST = "localhost";
 	static int DEFAULT_SERVER_PORT = 6555;
 
 	private Socket socket;
 
-	private IncommingStreamHandler incommingStreamHandler;
+	private IncomingStreamHandler incomingStreamHandler;
 	private OutgoingStreamHandler outgoingStreamHandler;
 
-	private GazeApiResponseListener responseListener;
+	private IGazeApiResponseListener responseListener;
+
+	private IGazeApiConnectionListener connectionListener;
 
 	private BlockingQueue<String> requestQueue;
 
-	public GazeApiManager(GazeApiResponseListener responseListener) 
-	{
-		this.responseListener = responseListener;
-		this.requestQueue= new LinkedBlockingQueue<String>(); 
+	public GazeApiManager(IGazeApiResponseListener responseListener) {
+		this(responseListener, null);
 	}
 
-	public void requestTracker(ClientMode mode, ApiVersion version)
-	{
+	public GazeApiManager(IGazeApiResponseListener responseListener,
+			IGazeApiConnectionListener connectionListener) {
+		this.responseListener = responseListener;
+		this.connectionListener = connectionListener;
+		this.requestQueue = new LinkedBlockingQueue<String>();
+	}
+
+	public void requestTracker(ClientMode mode, ApiVersion version) {
 		Gson gson = new Gson();
 		TrackerSetRequest gr = new TrackerSetRequest();
 
@@ -57,80 +64,59 @@ public class GazeApiManager
 		request(gson.toJsonTree(gr, TrackerSetRequest.class).toString());
 	}
 
-	public void requestAllStates()
-	{
+	public void requestAllStates() {
 		Gson gson = new Gson();
 		TrackerGetRequest gr = new TrackerGetRequest();
 
-		gr.values = new String[]
-				{
-				Protocol.TRACKER_HEARTBEATINTERVAL,
-				Protocol.TRACKER_ISCALIBRATED,
-				Protocol.TRACKER_ISCALIBRATING,
-				Protocol.TRACKER_TRACKERSTATE,
-				Protocol.TRACKER_SCREEN_INDEX,
+		gr.values = new String[] { Protocol.TRACKER_HEARTBEATINTERVAL,
+				Protocol.TRACKER_ISCALIBRATED, Protocol.TRACKER_ISCALIBRATING,
+				Protocol.TRACKER_TRACKERSTATE, Protocol.TRACKER_SCREEN_INDEX,
 				Protocol.TRACKER_SCREEN_RESOLUTION_WIDTH,
 				Protocol.TRACKER_SCREEN_RESOLUTION_HEIGHT,
 				Protocol.TRACKER_SCREEN_PHYSICAL_WIDTH,
 				Protocol.TRACKER_SCREEN_PHYSICAL_HEIGHT,
-				Protocol.TRACKER_CALIBRATIONRESULT,
-				Protocol.TRACKER_FRAMERATE,
-				Protocol.TRACKER_VERSION,
-				Protocol.TRACKER_MODE_PUSH
-				};
+				Protocol.TRACKER_CALIBRATIONRESULT, Protocol.TRACKER_FRAMERATE,
+				Protocol.TRACKER_VERSION, Protocol.TRACKER_MODE_PUSH };
 
 		request(gson.toJsonTree(gr, TrackerGetRequest.class).toString());
 	}
 
-	public void requestCalibrationStates()
-	{
+	public void requestCalibrationStates() {
 		Gson gson = new Gson();
 		TrackerGetRequest gr = new TrackerGetRequest();
 
 		gr.category = Protocol.CATEGORY_TRACKER;
 		gr.request = Protocol.TRACKER_REQUEST_GET;
-		gr.values = new String[]
-				{
-				Protocol.TRACKER_ISCALIBRATED,
-				Protocol.TRACKER_ISCALIBRATING,
-				};
+		gr.values = new String[] { Protocol.TRACKER_ISCALIBRATED,
+				Protocol.TRACKER_ISCALIBRATING, };
 
 		request(gson.toJsonTree(gr, TrackerGetRequest.class).toString());
 	}
 
-	public void requestScreenStates()
-	{
+	public void requestScreenStates() {
 		Gson gson = new Gson();
 		TrackerGetRequest gr = new TrackerGetRequest();
 
-		gr.values = new String[]
-				{
-				Protocol.TRACKER_SCREEN_INDEX,
+		gr.values = new String[] { Protocol.TRACKER_SCREEN_INDEX,
 				Protocol.TRACKER_SCREEN_RESOLUTION_WIDTH,
 				Protocol.TRACKER_SCREEN_RESOLUTION_HEIGHT,
 				Protocol.TRACKER_SCREEN_PHYSICAL_WIDTH,
-				Protocol.TRACKER_SCREEN_PHYSICAL_HEIGHT
-				};
+				Protocol.TRACKER_SCREEN_PHYSICAL_HEIGHT };
 
 		request(gson.toJsonTree(gr, TrackerGetRequest.class).toString());
 	}
 
-	public void requestTrackerState()
-	{
+	public void requestTrackerState() {
 		Gson gson = new Gson();
 		TrackerGetRequest gr = new TrackerGetRequest();
 
-		gr.values = new String[]
-				{
-				Protocol.TRACKER_TRACKERSTATE,
-				Protocol.TRACKER_FRAMERATE
-				};
+		gr.values = new String[] { Protocol.TRACKER_TRACKERSTATE,
+				Protocol.TRACKER_FRAMERATE };
 
 		request(gson.toJsonTree(gr, TrackerGetRequest.class).toString());
 	}
 
-	public void requestHeartbeat()
-	{
+	public void requestHeartbeat() {
 		Gson gson = new Gson();
 		RequestBase gr = new RequestBase();
 
@@ -139,8 +125,7 @@ public class GazeApiManager
 		request(gson.toJson(gr));
 	}
 
-	public void requestCalibrationStart(int pointcount)
-	{
+	public void requestCalibrationStart(int pointcount) {
 		Gson gson = new Gson();
 		CalibrationStartRequest gr = new CalibrationStartRequest();
 
@@ -149,19 +134,18 @@ public class GazeApiManager
 		request(gson.toJsonTree(gr, CalibrationStartRequest.class).toString());
 	}
 
-	public void requestCalibrationPointStart(int x, int y)
-	{
+	public void requestCalibrationPointStart(int x, int y) {
 		Gson gson = new Gson();
 		CalibrationPointStartRequest gr = new CalibrationPointStartRequest();
 
 		gr.values.x = x;
 		gr.values.y = y;
 
-		request(gson.toJsonTree(gr, CalibrationPointStartRequest.class).toString());
+		request(gson.toJsonTree(gr, CalibrationPointStartRequest.class)
+				.toString());
 	}
 
-	public void requestCalibrationPointEnd()
-	{
+	public void requestCalibrationPointEnd() {
 		Gson gson = new Gson();
 		RequestBase gr = new RequestBase();
 
@@ -171,8 +155,7 @@ public class GazeApiManager
 		request(gson.toJson(gr));
 	}
 
-	public void requestCalibrationAbort()
-	{
+	public void requestCalibrationAbort() {
 		Gson gson = new Gson();
 		RequestBase gr = new RequestBase();
 
@@ -182,8 +165,7 @@ public class GazeApiManager
 		request(gson.toJson(gr));
 	}
 
-	public void requestCalibrationClear()
-	{
+	public void requestCalibrationClear() {
 		Gson gson = new Gson();
 		RequestBase gr = new RequestBase();
 
@@ -193,8 +175,8 @@ public class GazeApiManager
 		request(gson.toJson(gr));
 	}
 
-	public void requestScreenSwitch(int screenIndex, int screenResW, int screenResH, float screenPsyW, float screenPsyH)
-	{
+	public void requestScreenSwitch(int screenIndex, int screenResW,
+			int screenResH, float screenPsyW, float screenPsyH) {
 		Gson gson = new Gson();
 		TrackerSetRequest gr = new TrackerSetRequest();
 
@@ -210,158 +192,202 @@ public class GazeApiManager
 		request(gson.toJsonTree(gr, TrackerSetRequest.class).toString());
 	}
 
-	public boolean connect(String host, int port)
-	{
+	public boolean connect(String host, int port) {
 		close();
 
-		try 
-		{
+		try {
 			InetAddress address = InetAddress.getByName(host);
 			socket = new Socket(address, port);
 
-			incommingStreamHandler = new IncommingStreamHandler();
-			incommingStreamHandler.start();
+			// notify connection change
+			if (null != connectionListener)
+				connectionListener.onGazeApiConnectionStateChanged(socket
+						.isConnected());
+
+			incomingStreamHandler = new IncomingStreamHandler();
+			incomingStreamHandler.start();
 
 			outgoingStreamHandler = new OutgoingStreamHandler();
 			outgoingStreamHandler.start();
-		}
-		catch (Exception e) 
-		{
-			System.out.println("Error opening socket. Is Tracker Server running?");
+		} catch (IOException ioe) {
+			System.out
+					.println("Unable to open socket. Is Tracker Server running? Exception: "
+							+ ioe.getLocalizedMessage());
+
+			// notify connection change
+			if (null != connectionListener)
+				connectionListener.onGazeApiConnectionStateChanged(false);
+
+			close();
+			return false;
+		} catch (Exception e) {
+			System.out
+					.println("Exception while establishing socket connection. Is Tracker Server running? Exception: "
+							+ e.getLocalizedMessage());
 			close();
 			return false;
 		}
 
 		return true;
-	}	
+	}
 
-	public void close()
-	{
-		try 
-		{
-			if(null != incommingStreamHandler)
-				incommingStreamHandler.stop();
+	public void close() {
+		try {
+			if (null != incomingStreamHandler)
+				incomingStreamHandler.stop();
 
-			if(null != outgoingStreamHandler)
+			if (null != outgoingStreamHandler)
 				outgoingStreamHandler.stop();
 
-			if(null != socket)
+			if (null != socket)
 				socket.close();
 
-			if(null != requestQueue)
+			if (null != requestQueue)
 				requestQueue.clear();
-		}
-		catch (Exception e) 
-		{
+		} catch (Exception e) {
 			System.out.println("Error closing socket");
 		}
 	}
 
-	public boolean isConnected()
-	{
-		if(null != socket)
+	public boolean isConnected() {
+		if (null != socket)
 			return socket.isConnected();
 
 		return false;
 	}
 
-	protected void request(String request)
-	{
+	protected void request(String request) {
 		requestQueue.add(request);
 	}
 
-	private class IncommingStreamHandler implements Runnable
-	{
-		private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	private class IncomingStreamHandler implements Runnable {
+		private final ExecutorService executor = Executors
+				.newSingleThreadExecutor();
 
-		private void start()
-		{
+		private void start() {
 			executor.submit(this);
 		}
 
-		private void stop()
-		{
-			executor.shutdownNow();
+		private void stop() {
+			if (!executor.isShutdown())
+				executor.shutdownNow();
 		}
 
 		@Override
-		public void run() 
-		{
-			try 
-			{
+		public void run() {
+			try {
 				String response;
+
 				InputStream is = socket.getInputStream();
 				InputStreamReader isr = new InputStreamReader(is);
 				BufferedReader reader = new BufferedReader(isr);
 
-				while (!(Thread.currentThread().isInterrupted()))
-				{
-					response = reader.readLine();
+				while (!(Thread.currentThread().isInterrupted())) {
+					try {
+						while (reader.ready()) {
+							response = reader.readLine();
 
-					if(null != responseListener)
-						responseListener.onGazeApiResponse(response);
+							if (null != response && !response.isEmpty()
+									&& null != responseListener) {
+								responseListener.onGazeApiResponse(response);
+							}
+						}
+					} catch (IOException ioe) {
+						// closing down
+					} catch (Exception e) {
+						System.out
+								.println("Exception while reading from socket: "
+										+ e.getLocalizedMessage());
+					}
 				}
-			}
-			catch (IOException ioe) 
-			{
-				//closed down
-			}
-			catch (Exception e) 
-			{
-				System.out.println("Exception while running IncommingStreamHandler: "+e.getLocalizedMessage());
+			} catch (Exception e) {
+				System.out
+						.println("Exception while etablishing incoming socket connection: "
+								+ e.getLocalizedMessage());
 			}
 		}
 	}
 
-	private class OutgoingStreamHandler implements Runnable
-	{
-		private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	private class OutgoingStreamHandler implements Runnable {
+		private final int NUM_WRITE_ATTEMPTS_BEFORE_FAIL = 3;
+		private int numWriteAttempt;
 
-		private void start()
-		{
+		private final ExecutorService executor = Executors
+				.newSingleThreadExecutor();
+
+		private void start() {
 			executor.submit(this);
 		}
 
-		private void stop()
-		{
-			executor.shutdownNow();
+		private void stop() {
+			if (!executor.isShutdown())
+				executor.shutdownNow();
 		}
 
 		@Override
-		public void run() 
-		{
-			try 
-			{
-				String request;
+		public void run() {
+			try {
+				String request = null;
+
 				OutputStream os = socket.getOutputStream();
 				OutputStreamWriter osw = new OutputStreamWriter(os);
 				BufferedWriter writer = new BufferedWriter(osw);
 
-				while (!(Thread.currentThread().isInterrupted()))
-				{
-					request = requestQueue.take();
+				while (!(Thread.currentThread().isInterrupted())) {
+					try {
+						request = requestQueue.take();
 
-					writer.write(request);
-					writer.newLine();
-					writer.flush();
+						writer.write(request);
+						writer.newLine();
+						writer.flush();
+
+						if (numWriteAttempt > 0)
+							numWriteAttempt = 0;
+					} catch (InterruptedException ie) {
+						// closing down
+					} catch (IOException ioe) {
+						// Has writing to socket failed and may server be
+						// disconnected?
+						if (numWriteAttempt++ >= NUM_WRITE_ATTEMPTS_BEFORE_FAIL) {
+							// notify connection listener if any
+							if (null != connectionListener)
+								connectionListener
+										.onGazeApiConnectionStateChanged(false);
+
+							// server must be disconnected, shut down network
+							// layer
+							GazeApiManager.this.close();
+						} else {
+							// else retry request asap
+							requestQueue.add(request);
+						}
+					} catch (Exception e) {
+						System.out
+								.println("Exception while writing to socket: "
+										+ e.getLocalizedMessage());
+					}
 				}
-			}
-			catch (InterruptedException ie) 
-			{
-				//closed down
-			}
-			catch (Exception e) 
-			{
-				System.out.println("Exception while running OutgoingStreamHandler: "+e.getLocalizedMessage());
+			} catch (Exception e) {
+				System.out
+						.println("Exception while etablishing outgoing socket connection: "
+								+ e.getLocalizedMessage());
 			}
 		}
 	}
 
 	/**
-	 * Callback interface responsible for handling messages returned from the GazeApiManager
+	 * Callback interface responsible for handling messages returned from the
+	 * GazeApiManager
 	 */
-	public interface GazeApiResponseListener
-	{
+	public interface IGazeApiResponseListener {
 		public void onGazeApiResponse(String response);
+	}
+
+	/**
+	 * Callback interface responsible for handling connection state
+	 * notifications from the GazeApiManager
+	 */
+	public interface IGazeApiConnectionListener {
+		public void onGazeApiConnectionStateChanged(boolean isConnected);
 	}
 }

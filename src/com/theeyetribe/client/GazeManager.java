@@ -1,8 +1,10 @@
 package com.theeyetribe.client;
 
 import java.net.HttpURLConnection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
@@ -12,7 +14,8 @@ import java.util.concurrent.LinkedBlockingDeque;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.theeyetribe.client.GazeApiManager.GazeApiResponseListener;
+import com.theeyetribe.client.GazeApiManager.IGazeApiConnectionListener;
+import com.theeyetribe.client.GazeApiManager.IGazeApiResponseListener;
 import com.theeyetribe.client.data.CalibrationResult;
 import com.theeyetribe.client.data.GazeData;
 import com.theeyetribe.client.reply.CalibrationPointEndReply;
@@ -21,13 +24,18 @@ import com.theeyetribe.client.reply.ReplyFailed;
 import com.theeyetribe.client.reply.TrackerGetReply;
 
 /**
- * This singleton is the main entry point of the TET C# Client. It manages all routines associated to gaze control.
+ * This singleton is the main entry point of the TET C# Client. It manages all
+ * routines associated to gaze control.
  * <p>
- * Using this class a developer can 'calibrate' an eye tracking setup and attach listeners to receive live data streams
- * of {@link TETCSharpClient.Data.GazeData} updates.
+ * Using this class a developer can 'calibrate' an eye tracking setup and attach
+ * listeners to receive live data streams of
+ * {@link TETCSharpClient.Data.GazeData} updates.
  */
-public class GazeManager implements GazeApiResponseListener
-{
+public class GazeManager implements IGazeApiResponseListener,
+		IGazeApiConnectionListener {
+	
+	private final static int INIT_TIME_DELAY_SECONDS = 10;
+
 	private final static int FRAME_QUEUE_SIZE = 10;
 
 	private static GazeManager instance;
@@ -35,6 +43,7 @@ public class GazeManager implements GazeApiResponseListener
 	protected List<IGazeListener> gazeListeners;
 	protected List<ICalibrationResultListener> calibrationResultListeners;
 	protected List<ITrackerStateListener> trackerStateListeners;
+	protected List<IConnectionStateListener> connectionStateListeners;
 
 	protected ICalibrationProcessHandler calibrationListener;
 	protected int totalCalibrationPoints;
@@ -50,6 +59,8 @@ public class GazeManager implements GazeApiResponseListener
 
 	private ExecutorService threadPool;
 
+	private SimpleDateFormat sdf;
+
 	protected boolean isActive;
 
 	protected Object initializationLock;
@@ -61,323 +72,330 @@ public class GazeManager implements GazeApiResponseListener
 	protected ApiVersion version;
 	protected Boolean isCalibrated;
 	protected Boolean isCalibrating;
-	protected Integer heartbeatMillis = 3000; //default value
+	protected Integer heartbeatMillis = 3000; // default value
 	protected Integer screenIndex;
 	protected Integer screenResolutionWidth;
 	protected Integer screenResolutionHeight;
 	protected Float screenPhysicalWidth;
 	protected Float screenPhysicalHeight;
 
-	private GazeManager()
-	{
-		gazeListeners = Collections.synchronizedList( new ArrayList<IGazeListener>() ) ;
-		calibrationResultListeners = Collections.synchronizedList( new ArrayList<ICalibrationResultListener>() ) ;
-		trackerStateListeners = Collections.synchronizedList( new ArrayList<ITrackerStateListener>() ) ;
+	private GazeManager() {
+		gazeListeners = Collections
+				.synchronizedList(new ArrayList<IGazeListener>());
+		calibrationResultListeners = Collections
+				.synchronizedList(new ArrayList<ICalibrationResultListener>());
+		trackerStateListeners = Collections
+				.synchronizedList(new ArrayList<ITrackerStateListener>());
+		connectionStateListeners = Collections
+				.synchronizedList(new ArrayList<IConnectionStateListener>());
+
+		sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
 		gazeDeque = new LinkedBlockingDeque<GazeData>(FRAME_QUEUE_SIZE);
 		gazeBroadcaster = new GazeBroadcaster();
 		heartbeatHandler = new Heartbeat();
 	}
 
-	public static GazeManager getInstance()
-	{
-		if(null == instance)
+	public static GazeManager getInstance() {
+		if (null == instance)
 			instance = new GazeManager();
 
 		return instance;
 	}
 
 	/**
-	 * Activates TET C# Client and all underlying routines using default values. Should be called _only_
-	 * once when an application starts up. Calling thread will be locked during initialization.
+	 * Activates TET C# Client and all underlying routines using default values.
+	 * Should be called _only_ once when an application starts up. Calling
+	 * thread will be locked during initialization.
 	 * 
-	 * @param version Version number of the Tracker API that this client will be compliant to
-	 * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
+	 * @param version
+	 *            Version number of the Tracker API that this client will be
+	 *            compliant to
+	 * @param mode
+	 *            Mode though which the client will receive GazeData. Either
+	 *            ClientMode.PUSH or ClientMode.PULL
 	 * @return portnumber if successfully activated, false otherwise
 	 */
-	public boolean activate(ApiVersion version, ClientMode mode)
-	{
-		return activate(version, mode, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT);
+	public boolean activate(ApiVersion version, ClientMode mode) {
+		return activate(version, mode, GazeApiManager.DEFAULT_SERVER_HOST,
+				GazeApiManager.DEFAULT_SERVER_PORT);
 	}
 
 	/**
-	 * Activates TET C# Client and all underlying routines. Should be called _only_ once when an 
-	 * application starts up. Calling thread will be locked during initialization.
+	 * Activates TET C# Client and all underlying routines. Should be called
+	 * _only_ once when an application starts up. Calling thread will be locked
+	 * during initialization.
 	 * 
-	 * @param version Version number of the Tracker API that this client will be compliant to
-	 * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
-	 * @param hostname The host name or IP address where the eye tracking server is running
-	 * @param mode The port number used for the eye tracking server
+	 * @param version
+	 *            Version number of the Tracker API that this client will be
+	 *            compliant to
+	 * @param mode
+	 *            Mode though which the client will receive GazeData. Either
+	 *            ClientMode.PUSH or ClientMode.PULL
+	 * @param hostname
+	 *            The host name or IP address where the eye tracking server is
+	 *            running
+	 * @param mode
+	 *            The port number used for the eye tracking server
 	 * @return portnumber if successfully activated, false otherwise
 	 */
-	public boolean activate(ApiVersion version, ClientMode mode, String hostname, int portnumber)
-	{	
-		//if already running, deactivate before starting anew		
-		if(isActive)
-			deactivate();
+	public boolean activate(final ApiVersion version, final ClientMode mode,
+			final String hostname, final int portnumber) {
+		synchronized (instance) {
+			// if already running, deactivate before starting anew
+			if (isActive)
+				deactivate();
 
-		//lock calling thread while initializing
-		initializationLock = Thread.currentThread();
-		synchronized (initializationLock)
-		{
-			try 
-			{
-				threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+			// lock calling thread while initializing
+			initializationLock = Thread.currentThread();
+			synchronized (initializationLock) {
+				try {
+					// threadPool =
+					// Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+					threadPool = Executors.newCachedThreadPool();
 
-				apiManager = new GazeApiManager(this);
-				apiManager.connect(hostname, portnumber);
+					// make sure we do not init networking on calling thread
+					threadPool.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								apiManager = new GazeApiManager(
+										GazeManager.this, GazeManager.this);
+								apiManager.connect(hostname, portnumber);
 
-				if(apiManager.isConnected())
-				{
-					apiManager.requestTracker( mode, version);
-					apiManager.requestAllStates();
+								if (apiManager.isConnected()) {
+									apiManager.requestTracker(mode, version);
+									apiManager.requestAllStates();
+								}
+							} catch (Exception e) {
+								if (null != apiManager)
+									apiManager.close();
 
-					//We wait untill above requests have been handled by server
-					initializationLock.wait();
+								System.out
+										.println("Error initializing GazeManager: "
+												+ e.getLocalizedMessage());
+							}
+						}
+					});
 
-					if(!heartbeatHandler.isAlive())
+					// We wait until above requests have been handled by server
+					// or timeout occurs
+					initializationLock.wait(INIT_TIME_DELAY_SECONDS * 1000);
+
+					if (!heartbeatHandler.isAlive())
 						heartbeatHandler.start();
 
-					isActive = true;
+					// lock is null if connected to server and initial requests
+					// completed
+					if (null == initializationLock)
+						isActive = true;
+				} catch (Exception e) {
+					System.out.println("Error initializing GazeManager.");
+					e.printStackTrace();
 				}
-				else
-					System.out.println("Error initializing GazeManager");
-			}
-			catch (Exception e) 
-			{
-				System.out.println("Error initializing GazeManager: "+e.getLocalizedMessage());
-			}
 
-			return isActive;
+				return isActive;
+			}
 		}
 	}
 
-	public void deactivate()
-	{
+	public void deactivate() {
+		synchronized (instance) {
+			if (null != heartbeatHandler && heartbeatHandler.isAlive())
+				heartbeatHandler.stop();
 
-		if(null != heartbeatHandler && heartbeatHandler.isAlive())
-			heartbeatHandler.stop();
+			if (null != apiManager) {
+				apiManager.close();
+				apiManager = null;
+			}
 
-		if(null != apiManager)
-		{
-			apiManager.close();
-			apiManager = null;
+			clearListeners();
+
+			threadPool.shutdownNow();
+
+			isActive = false;
 		}
-
-		clearListeners();
-
-		threadPool.shutdownNow();
-
-		isActive = false;
 	}
 
 	/**
+	 * @deprecated Use isActivated() instead.
 	 * @return Is the client library connected to Tracker Server?
 	 */
-	public boolean isConnected()
-	{
+	public boolean isConnected() {
 		return null != apiManager ? apiManager.isConnected() : false;
 	}
 
 	/**
+	 * @return Is the client library connected to Tracker Server and
+	 *         initialized?
+	 */
+	public boolean isActivated() {
+		return (null != apiManager ? apiManager.isConnected() : false)
+				&& isActive;
+	}
+
+	/**
 	 * Is the client in the middle of a calibration process?
-	 */	
-	public boolean isCalibrating()
-	{
+	 */
+	public boolean isCalibrating() {
 		return null != isCalibrating ? isCalibrating : false;
 	}
 
 	/**
 	 * Is the client already calibrated?
-	 */	
-	public boolean isCalibrated()
-	{
+	 */
+	public boolean isCalibrated() {
 		return null != isCalibrated ? isCalibrated : false;
 	}
 
 	/**
 	 * Index of currently used screen. Used for multiscreen setups.
 	 */
-	public int getScreenIndex()
-	{
+	public int getScreenIndex() {
 		return screenIndex;
 	}
 
 	/**
 	 * Physical width of screen in meters.
 	 */
-	public float getScreenPhysicalWidth()
-	{
+	public float getScreenPhysicalWidth() {
 		return screenPhysicalWidth;
 	}
 
 	/**
 	 * Physical height of screen in meters.
 	 */
-	public float getScreenPhysicalHeight()
-	{
+	public float getScreenPhysicalHeight() {
 		return screenPhysicalHeight;
 	}
 
 	/**
 	 * Width of screen resolution in pixels.
-	 */	
-	public int getScreenResolutionWidth()
-	{
+	 */
+	public int getScreenResolutionWidth() {
 		return screenResolutionWidth;
 	}
 
 	/**
 	 * Height of screen resolution in pixels.
-	 */	
-	public int getScreenResolutionHeight()
-	{
+	 */
+	public int getScreenResolutionHeight() {
 		return screenResolutionHeight;
 	}
 
 	/**
 	 * The current state of the connected TrackerDevice
 	 */
-	public TrackerState getTrackerState()
-	{
+	public TrackerState getTrackerState() {
 		return trackerState;
 	}
 
 	/**
 	 * Length of a heartbeat in milliseconds
-	 * <p>.
-	 * The Tracker Server defines the desired
-	 * length of a heartbeat and is in this implementation automatically acquired 
-	 * through the Tracker API.
+	 * <p>
+	 * . The Tracker Server defines the desired length of a heartbeat and is in
+	 * this implementation automatically acquired through the Tracker API.
 	 */
-	public int getHeartbeatMillis()
-	{
+	public int getHeartbeatMillis() {
 		return heartbeatMillis;
 	}
 
 	/**
-	 * The latest performed and valid CalibrationResult. Note the result is not necessarily positive
-	 * and clients should evaluate the result before using. 
+	 * The latest performed and valid CalibrationResult. Note the result is not
+	 * necessarily positive and clients should evaluate the result before using.
 	 */
-	public CalibrationResult getLastCalibrationResult()
-	{
+	public CalibrationResult getLastCalibrationResult() {
 		return lastCalibrationResult;
 	}
 
 	/**
 	 * Number of frames per second delivered by Tracker Server
 	 */
-	public FrameRate getFrameRate()
-	{
+	public FrameRate getFrameRate() {
 		return frameRate;
-	}	
+	}
 
 	/**
 	 * Current API version compliance of Tracker Server
 	 */
-	public ApiVersion getVersion() 
-	{ 
+	public ApiVersion getVersion() {
 		return version;
 	}
 
 	/**
 	 * Current running mode of this client
 	 */
-	public ClientMode getClientMode() 
-	{ 
+	public ClientMode getClientMode() {
 		return clientMode;
 	}
 
-	public void calibrationStart(int numCalibrationPoints, ICalibrationProcessHandler listener)
-	{
-		if(isActive)
-		{
+	public void calibrationStart(int numCalibrationPoints,
+			ICalibrationProcessHandler listener) {
+		if (isActive) {
 			sampledCalibrationPoints = 0;
 			totalCalibrationPoints = numCalibrationPoints;
 			calibrationListener = listener;
 			apiManager.requestCalibrationStart(numCalibrationPoints);
-		}
-		else
+		} else
 			System.out.println("TET Java Client not activated!");
 	}
 
-	public void calibrationPointStart(int x, int y)
-	{
-		if(isActive)
-		{
-			if(isCalibrating)
-			{
+	public void calibrationPointStart(int x, int y) {
+		if (isActive) {
+			if (isCalibrating) {
 				apiManager.requestCalibrationPointStart(x, y);
-			}
-			else
+			} else
 				System.out.println("TET Java Client calibration not started!");
-		}
-		else
+		} else
 			System.out.println("TET Java Client not activated!");
 	}
 
-	public void calibrationPointEnd()
-	{
-		if(isActive)
-		{
-			if(isCalibrating)
-			{
+	public void calibrationPointEnd() {
+		if (isActive) {
+			if (isCalibrating) {
 				apiManager.requestCalibrationPointEnd();
-			}
-			else
+			} else
 				System.out.println("TET Java Client calibration not started!");
-		}
-		else
+		} else
 			System.out.println("TET Java Client not activated!");
 	}
 
-	public void calibrationAbort()
-	{
-		if(isActive)
-		{
-			if(isCalibrating)
-			{
+	public void calibrationAbort() {
+		if (isActive) {
+			if (isCalibrating) {
 				apiManager.requestCalibrationAbort();
-			}
-			else
+			} else
 				System.out.println("TET Java Client calibration not started!");
-		}
-		else
+		} else
 			System.out.println("TET Java Client not activated!");
 	}
 
-	public void calibrationClear()
-	{
-		if(isActive)
-		{
+	public void calibrationClear() {
+		if (isActive) {
 			apiManager.requestCalibrationClear();
-		}
-		else
+		} else
 			System.out.println("TET Java Client not activated!");
 	}
 
-	public void switchScreen(int screenIndex, int screenResW, int screenResH, int screenPsyW, int screenPsyH)
-	{
-		if (isActive)
-		{
-			apiManager.requestScreenSwitch(screenIndex, screenResW, screenResH, screenPsyW, screenPsyH);
-		}
-		else
+	public void switchScreen(int screenIndex, int screenResW, int screenResH,
+			int screenPsyW, int screenPsyH) {
+		if (isActive) {
+			apiManager.requestScreenSwitch(screenIndex, screenResW, screenResH,
+					screenPsyW, screenPsyH);
+		} else
 			System.out.println("TET Java Client not activated!");
 	}
 
-	public void addGazeListener(IGazeListener listener)
-	{
-		if(null == listener)
-			throw new IllegalArgumentException("IGazeListener is NULL! Cannot add listener.");
+	public void addGazeListener(IGazeListener listener) {
+		if (null == listener)
+			throw new IllegalArgumentException(
+					"IGazeListener is NULL! Cannot add listener.");
 
-		if(!gazeListeners.contains(listener))
-			synchronized (gazeListeners) 
-			{
-				//if first listener
-				if(gazeListeners.size() == 0)
-				{
-					if(!gazeBroadcaster.isBroadcasting())
+		if (!gazeListeners.contains(listener))
+			synchronized (gazeListeners) {
+				// if first listener
+				if (gazeListeners.size() == 0) {
+					if (!gazeBroadcaster.isBroadcasting())
 						gazeBroadcaster.start();
 				}
 
@@ -385,20 +403,18 @@ public class GazeManager implements GazeApiResponseListener
 			}
 	}
 
-	public boolean removeGazeListener(IGazeListener listener)
-	{
+	public boolean removeGazeListener(IGazeListener listener) {
 		boolean result = false;
 
-		if(null != listener && null != gazeListeners && gazeListeners.contains(listener))
-		{
-			synchronized (gazeListeners) 
-			{
+		if (null != listener && null != gazeListeners
+				&& gazeListeners.contains(listener)) {
+			synchronized (gazeListeners) {
 				result = gazeListeners.remove(listener);
 
-				//if no listeners
-				if(gazeListeners.size() == 0)
-				{
-					if(null != gazeBroadcaster && gazeBroadcaster.isBroadcasting())
+				// if no listeners
+				if (gazeListeners.size() == 0) {
+					if (null != gazeBroadcaster
+							&& gazeBroadcaster.isBroadcasting())
 						gazeBroadcaster.stop();
 				}
 			}
@@ -407,42 +423,39 @@ public class GazeManager implements GazeApiResponseListener
 		return result;
 	}
 
-	public int getNumGazeListeners()
-	{
-		if(null != gazeListeners)
+	public int getNumGazeListeners() {
+		if (null != gazeListeners)
 			return gazeListeners.size();
 
 		return -1;
 	}
 
-	public boolean hasGazeListener(IGazeListener listener)
-	{
-		if(null != listener && null != gazeListeners && gazeListeners.contains(listener))
+	public boolean hasGazeListener(IGazeListener listener) {
+		if (null != listener && null != gazeListeners
+				&& gazeListeners.contains(listener))
 			return true;
 
 		return false;
 	}
 
-	public void addCalibrationResultListener(ICalibrationResultListener listener)
-	{
-		if(null == listener)
-			throw new IllegalArgumentException("ICalibrationResultListener is NULL! Cannot add listener.");
+	public void addCalibrationResultListener(ICalibrationResultListener listener) {
+		if (null == listener)
+			throw new IllegalArgumentException(
+					"ICalibrationResultListener is NULL! Cannot add listener.");
 
-		if(!calibrationResultListeners.contains(listener))
-			synchronized (calibrationResultListeners) 
-			{		
+		if (!calibrationResultListeners.contains(listener))
+			synchronized (calibrationResultListeners) {
 				calibrationResultListeners.add(listener);
 			}
 	}
 
-	public boolean removeCalibrationResultListener(ICalibrationResultListener listener)
-	{
+	public boolean removeCalibrationResultListener(
+			ICalibrationResultListener listener) {
 		boolean result = false;
 
-		if(null != listener && null != calibrationResultListeners && calibrationResultListeners.contains(listener))
-		{
-			synchronized (calibrationResultListeners) 
-			{
+		if (null != listener && null != calibrationResultListeners
+				&& calibrationResultListeners.contains(listener)) {
+			synchronized (calibrationResultListeners) {
 				result = calibrationResultListeners.remove(listener);
 			}
 		}
@@ -450,681 +463,726 @@ public class GazeManager implements GazeApiResponseListener
 		return result;
 	}
 
-	public int getNumCalibrationResultListeners()
-	{
-		if(null != calibrationResultListeners)
+	public int getNumCalibrationResultListeners() {
+		if (null != calibrationResultListeners)
 			return calibrationResultListeners.size();
 
 		return -1;
 	}
 
-	public boolean hasCalibrationResultListener(ICalibrationResultListener listener)
-	{
-		if(null != listener && null != calibrationResultListeners && calibrationResultListeners.contains(listener))
+	public boolean hasCalibrationResultListener(
+			ICalibrationResultListener listener) {
+		if (null != listener && null != calibrationResultListeners
+				&& calibrationResultListeners.contains(listener))
 			return true;
 
 		return false;
 	}
 
-	public void addTrackerStateListener(IGazeListener listener)
-	{
-		if(null == listener)
-			throw new IllegalArgumentException("GazeUpdateListener is NULL! Cannot add listener.");
+	public void addTrackerStateListener(ITrackerStateListener listener) {
+		if (null == listener)
+			throw new IllegalArgumentException(
+					"ITrackerStateListener is NULL! Cannot add listener.");
 
-		if(!gazeListeners.contains(listener))
-			synchronized (gazeListeners) 
-			{
-				//if first listener
-				if(gazeListeners.size() == 0)
-				{
-					if(!gazeBroadcaster.isBroadcasting())
-						gazeBroadcaster.start();
-				}
-
-				gazeListeners.add(listener);
+		if (!trackerStateListeners.contains(listener))
+			synchronized (trackerStateListeners) {
+				trackerStateListeners.add(listener);
 			}
 	}
 
-	public boolean removeTrackerStateListener(IGazeListener listener)
-	{
+	public boolean removeTrackerStateListener(ITrackerStateListener listener) {
 		boolean result = false;
 
-		if(null != listener && null != gazeListeners && gazeListeners.contains(listener))
-		{
-			synchronized (gazeListeners) 
-			{
-				result = gazeListeners.remove(listener);
-
-				//if no listeners
-				if(gazeListeners.size() == 0)
-				{
-					if(null != gazeBroadcaster && gazeBroadcaster.isBroadcasting())
-						gazeBroadcaster.stop();
-				}
+		if (null != listener && null != trackerStateListeners
+				&& trackerStateListeners.contains(listener)) {
+			synchronized (trackerStateListeners) {
+				result = trackerStateListeners.remove(listener);
 			}
 		}
 
 		return result;
 	}
 
-	public int getNumTrackerStateListeners()
-	{
-		if(null != gazeListeners)
-			return gazeListeners.size();
+	public int getNumTrackerStateListeners() {
+		if (null != trackerStateListeners)
+			return trackerStateListeners.size();
 
 		return -1;
 	}
 
-	public boolean hasTrackerStateListener(IGazeListener listener)
-	{
-		if(null != listener && null != gazeListeners && gazeListeners.contains(listener))
+	public boolean hasTrackerStateListener(ITrackerStateListener listener) {
+		if (null != listener && null != trackerStateListeners
+				&& trackerStateListeners.contains(listener))
 			return true;
 
 		return false;
 	}
 
-	public void clearListeners() 
-	{
-		if( null != gazeListeners)
-		{
-			synchronized (gazeListeners) 
-			{
+	public void addConnectionStateListener(IConnectionStateListener listener) {
+		if (null == listener)
+			throw new IllegalArgumentException(
+					"IConnectionStateListener is NULL! Cannot add listener.");
+
+		if (!connectionStateListeners.contains(listener))
+			synchronized (connectionStateListeners) {
+				connectionStateListeners.add(listener);
+			}
+	}
+
+	public boolean removeConnectionStateListener(
+			IConnectionStateListener listener) {
+		boolean result = false;
+
+		if (null != listener && null != connectionStateListeners
+				&& connectionStateListeners.contains(listener)) {
+			synchronized (connectionStateListeners) {
+				result = connectionStateListeners.remove(listener);
+			}
+		}
+
+		return result;
+	}
+
+	public int getNumConnectionStateListeners() {
+		if (null != connectionStateListeners)
+			return connectionStateListeners.size();
+
+		return -1;
+	}
+
+	public boolean hasConnectionStateListener(IConnectionStateListener listener) {
+		if (null != listener && null != connectionStateListeners
+				&& connectionStateListeners.contains(listener))
+			return true;
+
+		return false;
+	}
+
+	public void clearListeners() {
+		if (null != gazeListeners) {
+			synchronized (gazeListeners) {
 				gazeListeners.clear();
 			}
 		}
 
-		if( null != calibrationResultListeners)
-		{
-			synchronized (calibrationResultListeners) 
-			{
+		if (null != calibrationResultListeners) {
+			synchronized (calibrationResultListeners) {
 				calibrationResultListeners.clear();
 			}
 		}
 
-		if( null != trackerStateListeners)
-		{
-			synchronized (trackerStateListeners) 
-			{
+		if (null != trackerStateListeners) {
+			synchronized (trackerStateListeners) {
 				trackerStateListeners.clear();
 			}
 		}
 
-		if( null != gazeDeque)
-		{
-			synchronized (gazeDeque) 
-			{
+		if (null != connectionStateListeners) {
+			synchronized (connectionStateListeners) {
+				connectionStateListeners.clear();
+			}
+		}
+
+		if (null != gazeDeque) {
+			synchronized (gazeDeque) {
 				gazeDeque.clear();
 			}
-		}		
+		}
 
-		if(null != gazeBroadcaster && gazeBroadcaster.isBroadcasting())
+		if (null != gazeBroadcaster && gazeBroadcaster.isBroadcasting())
 			gazeBroadcaster.stop();
 	}
 
+	long total;
+	long frameCount;
+
 	@Override
-	public void onGazeApiResponse(String response)
-	{
-		Gson gson = new Gson();
-		ReplyBase reply = gson.fromJson(response, ReplyBase.class);
+	public void onGazeApiResponse(final String response) {
+		threadPool.execute(new Runnable() {
+			@Override
+			public void run() {
+				Gson gson = new Gson();
+				ReplyBase reply = gson.fromJson(response, ReplyBase.class);
 
-		if(reply.statuscode == HttpURLConnection.HTTP_OK)
-		{
-			if(reply.category.compareTo(Protocol.CATEGORY_TRACKER) == 0)
-			{
-				if(reply.request.compareTo(Protocol.TRACKER_REQUEST_GET) == 0)
-				{
-					JsonParser jsonParser = new JsonParser();
-					JsonObject jo = (JsonObject)jsonParser.parse(response);
-					TrackerGetReply tgr = gson.fromJson(jo, TrackerGetReply.class);
+				if (reply.statuscode == HttpURLConnection.HTTP_OK) {
+					if (reply.category.compareTo(Protocol.CATEGORY_TRACKER) == 0) {
+						if (reply.request
+								.compareTo(Protocol.TRACKER_REQUEST_GET) == 0) {
+							frameCount++;
 
-					if(null != tgr.values.version)
-						version = ApiVersion.fromInt(tgr.values.version);
+							long timeStamp = System.currentTimeMillis();
 
-					if(null != tgr.values.push)
-					{
-						if (tgr.values.push)
-							clientMode = ClientMode.PUSH;
-						else
-							clientMode = ClientMode.PULL;
-					}
+							JsonParser jsonParser = new JsonParser();
+							JsonObject jo = (JsonObject) jsonParser
+									.parse(response);
+							TrackerGetReply tgr = gson.fromJson(jo,
+									TrackerGetReply.class);
 
-					if(null != tgr.values.heartbeatInterval)
-						heartbeatMillis = tgr.values.heartbeatInterval;
+							if (null != tgr.values.version)
+								version = ApiVersion
+										.fromInt(tgr.values.version);
 
-					if(null != tgr.values.frameRate)
-						frameRate = FrameRate.fromInt(tgr.values.frameRate);		
-
-					if(null != tgr.values.trackerState)
-					{
-						//if tracker state changed, notify listeners
-						if (tgr.values.trackerState != TrackerState.toInt(trackerState))
-						{
-							trackerState = TrackerState.fromInt(tgr.values.trackerState);
-
-							synchronized (trackerStateListeners) 
-							{
-								for(final ITrackerStateListener listener : trackerStateListeners)
-								{
-									threadPool.execute(new Runnable()
-									{
-										@Override
-										public void run() 
-										{
-											try 
-											{
-												listener.onTrackerStateChanged(TrackerState.toInt(trackerState));
-											}
-											catch (Exception e) 
-											{
-												System.out.println("Exception while calling ITrackerStateListener.OnTrackerConnectionChanged() on listener " +
-														listener + ": " + e.getLocalizedMessage());
-											}
-										}
-									});
-								}
+							if (null != tgr.values.push) {
+								if (tgr.values.push)
+									clientMode = ClientMode.PUSH;
+								else
+									clientMode = ClientMode.PULL;
 							}
-						}
-					}
 
-					//if defined in json response, then set
-					if (((JsonObject)jo.get(Protocol.KEY_VALUES)).has(Protocol.TRACKER_CALIBRATIONRESULT))
-						lastCalibrationResult = tgr.values.calibrationResult;					
+							if (null != tgr.values.heartbeatInterval)
+								heartbeatMillis = tgr.values.heartbeatInterval;
 
-					if(null != tgr.values.isCalibrating)
-						isCalibrating = tgr.values.isCalibrating;
-					if(null != tgr.values.isCalibrated)
-					{
-						if(tgr.values.isCalibrated != isCalibrated)
-						{
-							//if calibration result changed, broadcast to all listeners
-							isCalibrated = tgr.values.isCalibrated;
-							synchronized (calibrationResultListeners) 
-							{
-								for(final ICalibrationResultListener listener : calibrationResultListeners)
-								{
-									threadPool.execute(new Runnable()
-									{
-										@Override
-										public void run() 
-										{
-											try 
-											{
-												listener.onCalibrationChanged(isCalibrated, lastCalibrationResult);
-											}
-											catch (Exception e) 
-											{
-												System.out.println("Exception while calling ICalibrationResultListener.OnCalibrationChanged() on listener " +
-														listener + ": " + e.getLocalizedMessage());
-											}
-										}
-									});
-								}
-							}
-						}
-					}	
+							if (null != tgr.values.frameRate)
+								frameRate = FrameRate
+										.fromInt(tgr.values.frameRate);
 
-					if(null != tgr.values.screenResolutionWidth)
-						screenResolutionWidth = tgr.values.screenResolutionWidth;
-					if(null != tgr.values.screenResolutionHeight)
-						screenResolutionHeight = tgr.values.screenResolutionHeight;
-					if(null != tgr.values.screenPhysicalWidth)
-						screenPhysicalWidth = tgr.values.screenPhysicalWidth;
-					if(null != tgr.values.screenPhysicalHeight)
-						screenPhysicalHeight = tgr.values.screenPhysicalHeight;					
-					if(null != tgr.values.screenIndex)
-					{			
-						//if screen index changed, broadcast to all listeners
-						if (tgr.values.screenIndex != screenIndex)
-						{
-							screenIndex = tgr.values.screenIndex;
+							if (null != tgr.values.trackerState) {
+								// if tracker state changed, notify listeners
+								if (tgr.values.trackerState != TrackerState
+										.toInt(trackerState)) {
+									trackerState = TrackerState
+											.fromInt(tgr.values.trackerState);
 
-							synchronized (trackerStateListeners) 
-							{
-								for(final ITrackerStateListener listener : trackerStateListeners)
-								{
-									threadPool.execute(new Runnable()
-									{
-										@Override
-										public void run() 
-										{
-											try 
-											{
-												listener.OnScreenStatesChanged(screenIndex, screenResolutionWidth, screenResolutionHeight, screenPhysicalWidth, screenPhysicalHeight);
-											}
-											catch (Exception e) 
-											{
-												System.out.println("Exception while calling ITrackerStateListener.OnScreenIndexChanged() on listener " + 
-														listener + ": " + e.getLocalizedMessage());
-											}
-										}
-									});
-								}
-							}
-						}						
-					}
-
-					//Add to high frequency broadcasting queue
-					if(null != tgr.values.frame)
-						//make room in queue, if full
-						while(!gazeDeque.offer(tgr.values.frame))
-							gazeDeque.poll();
-
-					//Special routine used for initialization
-					if (initializationLock != null)
-					{
-						synchronized (initializationLock)
-						{
-							initializationLock.notify();
-							initializationLock = null;
-						}
-					}
-				}
-				else if(reply.request.compareTo(Protocol.TRACKER_REQUEST_SET) == 0)
-				{
-					//do nothing
-				}
-			}
-			else if(reply.category.compareTo(Protocol.CATEGORY_CALIBRATION) == 0)
-			{
-				if(reply.request.compareTo(Protocol.CALIBRATION_REQUEST_START) == 0)
-				{
-					isCalibrating = true;
-
-					if(null != calibrationListener)
-						try 
-					{
-							calibrationListener.onCalibrationStarted();
-					}
-					catch (Exception e) 
-					{
-						System.out.println("Exception while calling ICalibrationProcessHandler.onCalibrationStarted() " +
-								"on listener " + calibrationListener + ": " + e.getLocalizedMessage());
-					}
-				}
-				else if(reply.request.compareTo(Protocol.CALIBRATION_REQUEST_POINTSTART) == 0)
-				{
-
-				}
-				else if(reply.request.compareTo(Protocol.CALIBRATION_REQUEST_POINTEND) == 0)
-				{
-					++sampledCalibrationPoints;
-
-					if (null != calibrationListener)
-					{
-						//Notify calibration listener that a new calibration point has been sampled
-						try
-						{
-							calibrationListener.onCalibrationProgress(sampledCalibrationPoints / totalCalibrationPoints);
-						}
-						catch (Exception e)
-						{
-							System.out.println("Exception while calling ICalibrationProcessHandler.OnCalibrationProgress() on listener " + 
-									calibrationListener + ": " + e.getLocalizedMessage());
-						}
-
-
-						if (sampledCalibrationPoints == totalCalibrationPoints)
-							//Notify calibration listener that all calibration points have been sampled and the analysis of the calirbation results has begun 
-							try
-						{
-								calibrationListener.onCalibrationProcessing();
-						}
-						catch (Exception e)
-						{
-							System.out.println("Exception while calling ICalibrationProcessHandler.OnCalibrationProcessing() on listener " +
-									calibrationListener + ": " + e.getLocalizedMessage());
-						}
-					}
-
-					final CalibrationPointEndReply cper = gson.fromJson(response, CalibrationPointEndReply.class);
-
-					if (cper == null || cper.values.calibrationResult == null)
-						return; // not done with calibration yet
-
-					//if calibration state changed, notify listeners
-					if (cper.values.calibrationResult.result != isCalibrated)
-					{
-						synchronized (calibrationResultListeners) 
-						{
-							for(final ICalibrationResultListener listener : calibrationResultListeners)
-							{
-								threadPool.execute(new Runnable()
-								{
-									@Override
-									public void run() 
-									{
-										try 
-										{
-											listener.onCalibrationChanged(cper.values.calibrationResult.result, cper.values.calibrationResult);
-										}
-										catch (Exception e) 
-										{
-											System.out.println("Exception while calling ICalibrationResultListener.OnCalibrationChanged() on listener " +
-													listener + ": " + e.getLocalizedMessage());
+									synchronized (trackerStateListeners) {
+										for (final ITrackerStateListener listener : trackerStateListeners) {
+											threadPool.execute(new Runnable() {
+												@Override
+												public void run() {
+													try {
+														listener.onTrackerStateChanged(TrackerState
+																.toInt(trackerState));
+													} catch (Exception e) {
+														System.out.println("Exception while calling ITrackerStateListener.OnTrackerConnectionChanged() on listener "
+																+ listener
+																+ ": "
+																+ e.getLocalizedMessage());
+													}
+												}
+											});
 										}
 									}
-								});
+								}
 							}
+
+							// if defined in json response, then set
+							if (((JsonObject) jo.get(Protocol.KEY_VALUES))
+									.has(Protocol.TRACKER_CALIBRATIONRESULT))
+								lastCalibrationResult = tgr.values.calibrationResult;
+
+							if (null != tgr.values.isCalibrating)
+								isCalibrating = tgr.values.isCalibrating;
+							if (null != tgr.values.isCalibrated) {
+								if (tgr.values.isCalibrated != isCalibrated) {
+									// if calibration result changed, broadcast
+									// to all listeners
+									isCalibrated = tgr.values.isCalibrated;
+									synchronized (calibrationResultListeners) {
+										for (final ICalibrationResultListener listener : calibrationResultListeners) {
+											threadPool.execute(new Runnable() {
+												@Override
+												public void run() {
+													try {
+														listener.onCalibrationChanged(
+																isCalibrated,
+																lastCalibrationResult);
+													} catch (Exception e) {
+														System.out.println("Exception while calling ICalibrationResultListener.OnCalibrationChanged() on listener "
+																+ listener
+																+ ": "
+																+ e.getLocalizedMessage());
+													}
+												}
+											});
+										}
+									}
+								}
+							}
+
+							if (null != tgr.values.screenResolutionWidth)
+								screenResolutionWidth = tgr.values.screenResolutionWidth;
+							if (null != tgr.values.screenResolutionHeight)
+								screenResolutionHeight = tgr.values.screenResolutionHeight;
+							if (null != tgr.values.screenPhysicalWidth)
+								screenPhysicalWidth = tgr.values.screenPhysicalWidth;
+							if (null != tgr.values.screenPhysicalHeight)
+								screenPhysicalHeight = tgr.values.screenPhysicalHeight;
+							if (null != tgr.values.screenIndex) {
+								// if screen index changed, broadcast to all
+								// listeners
+								if (tgr.values.screenIndex != screenIndex) {
+									screenIndex = tgr.values.screenIndex;
+
+									synchronized (trackerStateListeners) {
+										for (final ITrackerStateListener listener : trackerStateListeners) {
+											threadPool.execute(new Runnable() {
+												@Override
+												public void run() {
+													try {
+														listener.OnScreenStatesChanged(
+																screenIndex,
+																screenResolutionWidth,
+																screenResolutionHeight,
+																screenPhysicalWidth,
+																screenPhysicalHeight);
+													} catch (Exception e) {
+														System.out.println("Exception while calling ITrackerStateListener.OnScreenIndexChanged() on listener "
+																+ listener
+																+ ": "
+																+ e.getLocalizedMessage());
+													}
+												}
+											});
+										}
+									}
+								}
+							}
+
+							// Add to high frequency broadcasting queue
+							if (((JsonObject) jo.get(Protocol.KEY_VALUES))
+									.has(Protocol.TRACKER_FRAME)) {
+								// fixing timestamp based on string
+								// representation, Json 32bit int issue
+								// TODO: This will eventually be done serverside
+								if (null != tgr.values.frame.timeStampString
+										&& !tgr.values.frame.timeStampString
+												.isEmpty()) {
+									Date date;
+									try {
+										date = sdf
+												.parse(tgr.values.frame.timeStampString);
+										tgr.values.frame.timeStamp = date
+												.getTime(); // UTC
+									} catch (Exception e) {
+										// consume error
+									}
+								}
+
+								// make room in queue, if full
+								while (!gazeDeque.offer(tgr.values.frame))
+									gazeDeque.poll();
+							}
+
+							// Special routine used for initialization
+							if (initializationLock != null) {
+								synchronized (initializationLock) {
+									// Lock might be null
+									if (null != initializationLock) {
+										initializationLock.notify();
+										initializationLock = null;
+									}
+								}
+							}
+
+							total += System.currentTimeMillis() - timeStamp;
+						} else if (reply.request
+								.compareTo(Protocol.TRACKER_REQUEST_SET) == 0) {
+							// do nothing
 						}
+					} else if (reply.category
+							.compareTo(Protocol.CATEGORY_CALIBRATION) == 0) {
+						if (reply.request
+								.compareTo(Protocol.CALIBRATION_REQUEST_START) == 0) {
+							isCalibrating = true;
+
+							if (null != calibrationListener)
+								try {
+									calibrationListener.onCalibrationStarted();
+								} catch (Exception e) {
+									System.out
+											.println("Exception while calling ICalibrationProcessHandler.onCalibrationStarted() "
+													+ "on listener "
+													+ calibrationListener
+													+ ": "
+													+ e.getLocalizedMessage());
+								}
+						} else if (reply.request
+								.compareTo(Protocol.CALIBRATION_REQUEST_POINTSTART) == 0) {
+
+						} else if (reply.request
+								.compareTo(Protocol.CALIBRATION_REQUEST_POINTEND) == 0) {
+							++sampledCalibrationPoints;
+
+							if (null != calibrationListener) {
+								// Notify calibration listener that a new
+								// calibration point has been sampled
+								try {
+									calibrationListener
+											.onCalibrationProgress((float) sampledCalibrationPoints
+													/ totalCalibrationPoints);
+								} catch (Exception e) {
+									System.out
+											.println("Exception while calling ICalibrationProcessHandler.OnCalibrationProgress() on listener "
+													+ calibrationListener
+													+ ": "
+													+ e.getLocalizedMessage());
+								}
+
+								if (sampledCalibrationPoints == totalCalibrationPoints)
+									// Notify calibration listener that all
+									// calibration points have been sampled and
+									// the analysis of the calibration results
+									// has begun
+									try {
+										calibrationListener
+												.onCalibrationProcessing();
+									} catch (Exception e) {
+										System.out.println("Exception while calling ICalibrationProcessHandler.OnCalibrationProcessing() on listener "
+												+ calibrationListener
+												+ ": "
+												+ e.getLocalizedMessage());
+									}
+							}
+
+							final CalibrationPointEndReply cper = gson
+									.fromJson(response,
+											CalibrationPointEndReply.class);
+
+							if (cper == null
+									|| cper.values.calibrationResult == null)
+								return; // not done with calibration yet
+
+							// if calibration state changed, notify listeners
+							if (cper.values.calibrationResult.result != isCalibrated) {
+								synchronized (calibrationResultListeners) {
+									for (final ICalibrationResultListener listener : calibrationResultListeners) {
+										threadPool.execute(new Runnable() {
+											@Override
+											public void run() {
+												try {
+													listener.onCalibrationChanged(
+															cper.values.calibrationResult.result,
+															cper.values.calibrationResult);
+												} catch (Exception e) {
+													System.out.println("Exception while calling ICalibrationResultListener.OnCalibrationChanged() on listener "
+															+ listener
+															+ ": "
+															+ e.getLocalizedMessage());
+												}
+											}
+										});
+									}
+								}
+							}
+
+							isCalibrated = cper.values.calibrationResult.result;
+							isCalibrating = !cper.values.calibrationResult.result;
+
+							if (isCalibrated)
+								lastCalibrationResult = cper.values.calibrationResult;
+
+							if (null != calibrationListener) {
+								// Notify calibration listener that calibration
+								// results are ready for evaluation
+								try {
+									calibrationListener
+											.onCalibrationResult(cper.values.calibrationResult);
+								} catch (Exception e) {
+									System.out
+											.println("Exception while calling ICalibrationProcessHandler.OnCalibrationResult() on listener "
+													+ calibrationListener
+													+ ": "
+													+ e.getLocalizedMessage());
+								}
+							}
+						} else if (reply.request
+								.compareTo(Protocol.CALIBRATION_REQUEST_ABORT) == 0) {
+							isCalibrating = false;
+
+							// restore states of last calibration if any
+							if (isActivated())
+								apiManager.requestCalibrationStates();
+						} else if (reply.request
+								.compareTo(Protocol.CALIBRATION_REQUEST_CLEAR) == 0) {
+							isCalibrated = false;
+							isCalibrating = false;
+							lastCalibrationResult = null;
+						}
+					} else if (reply.category
+							.compareTo(Protocol.CATEGORY_HEARTBEAT) == 0) {
+						// do nothing
+					} else {
+						ReplyFailed rf = gson.fromJson(response,
+								ReplyFailed.class);
+
+						System.out.println("Request FAILED");
+						System.out.println("Category: " + rf.category);
+						System.out.println("Request: " + rf.request);
+						System.out.println("StatusCode: " + rf.statuscode);
+						System.out.println("StatusMessage: "
+								+ rf.values.statusMessage);
 					}
+				} else {
+					ReplyFailed rf = gson.fromJson(response, ReplyFailed.class);
 
-					isCalibrated = cper.values.calibrationResult.result;
-					isCalibrating = !cper.values.calibrationResult.result;
+					/*
+					 * JSON Message status code is different from
+					 * HttpURLConnection.HTTP_OK. Check if special TET specific
+					 * status code before handling error
+					 */
 
-					if(isCalibrated)
-						lastCalibrationResult = cper.values.calibrationResult;
+					switch (rf.statuscode) {
+					case Protocol.STATUSCODE_CALIBRATION_UPDATE:
+						// The calibration state has changed, clients should
+						// update themselves
+						if (isActivated())
+							apiManager.requestCalibrationStates();
+						break;
 
-					if (null != calibrationListener)
-					{
-						//Notify calibration listener that calibration results are ready for evaluation
-						try
-						{
-							calibrationListener.onCalibrationResult(cper.values.calibrationResult);
-						}
-						catch (Exception e)
-						{
-							System.out.println("Exception while calling ICalibrationProcessHandler.OnCalibrationResult() on listener " +
-									calibrationListener + ": " + e.getLocalizedMessage());
-						}
+					case Protocol.STATUSCODE_SCREEN_UPDATE:
+						// The primary screen index has changed, clients should
+						// update themselves
+						if (isActivated())
+							apiManager.requestScreenStates();
+						break;
+
+					case Protocol.STATUSCODE_TRACKER_UPDATE:
+						// The connected Tracker Device has changed state,
+						// clients should update themselves
+						if (isActivated())
+							apiManager.requestTrackerState();
+						break;
+
+					default:
+						System.out.println("Request FAILED");
+						System.out.println("Category: " + rf.category);
+						System.out.println("Request: " + rf.request);
+						System.out.println("StatusCode: " + rf.statuscode);
+						System.out.println("StatusMessage: "
+								+ rf.values.statusMessage);
+						break;
 					}
 				}
-				else if(reply.request.compareTo(Protocol.CALIBRATION_REQUEST_ABORT) == 0)
-				{
-					isCalibrating = false;
-
-					//restore states of last calibration if any
-					apiManager.requestCalibrationStates();
-				}				
-				else if(reply.request.compareTo(Protocol.CALIBRATION_REQUEST_CLEAR) == 0)
-				{
-					isCalibrated = false;
-					isCalibrating = false;
-					lastCalibrationResult = null;
-				}
 			}
-			else if(reply.category.compareTo(Protocol.CATEGORY_HEARTBEAT) == 0)
-			{
-				//do nothing
-			}
-			else
-			{
-				ReplyFailed rf = gson.fromJson(response, ReplyFailed.class);
+		});
+	}
 
-				System.out.println("Request FAILED");
-				System.out.println("Category: " + rf.category);
-				System.out.println("Request: " + rf.request);
-				System.out.println("StatusCode: " + rf.statuscode);
-				System.out.println("StatusMessage: " + rf.values.statusMessage);
-			}
-		}
-		else
-		{
-			ReplyFailed rf = gson.fromJson(response, ReplyFailed.class);
-
-			/* 
-			 * JSON Message status code is different from HttpURLConnection.HTTP_OK. Check if special TET 
-			 * specific status code before handling error 
-			 */
-
-			switch (rf.statuscode)
-			{
-			case Protocol.STATUSCODE_CALIBRATION_UPDATE:
-				//The calibration state has changed, clients should update themselves
-				apiManager.requestCalibrationStates();
-				break;
-
-			case Protocol.STATUSCODE_SCREEN_UPDATE:
-				//The primary screen index has changed, clients should update themselves
-				apiManager.requestScreenStates();
-				break;
-
-			case Protocol.STATUSCODE_TRACKER_UPDATE:
-				//The connected Tracker Device has changed state, clients should update themselves
-				apiManager.requestTrackerState();
-				break;                    
-
-			default:
-				System.out.println("Request FAILED");
-				System.out.println("Category: " + rf.category);
-				System.out.println("Request: " + rf.request);
-				System.out.println("StatusCode: " + rf.statuscode);
-				System.out.println("StatusMessage: " + rf.values.statusMessage);
-				break;                
+	@Override
+	public void onGazeApiConnectionStateChanged(final boolean isConnected) {
+		// Notify listeners of change in connection state
+		synchronized (connectionStateListeners) {
+			for (final IConnectionStateListener listener : connectionStateListeners) {
+				threadPool.execute(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							listener.onConnectionStateChanged(isConnected);
+						} catch (Exception e) {
+							System.out
+									.println("Exception while calling IConnectionStateListener.onConnectionStateChanged() on listener "
+											+ listener
+											+ ": "
+											+ e.getLocalizedMessage());
+						}
+					}
+				});
 			}
 		}
 	}
 
 	/**
-	 *  Current running mode of this client
+	 * Current running mode of this client
 	 */
-	public enum ClientMode 
-	{
-		PUSH(1001),
-		PULL(1002);
+	public enum ClientMode {
+		PUSH(1001), PULL(1002);
 
 		private int clientMode;
 
-		private ClientMode(int clientMode)
-		{
+		private ClientMode(int clientMode) {
 			this.clientMode = clientMode;
 		}
 	}
 
 	/**
-	 *  Current running mode of this client
+	 * Current running mode of this client
 	 */
-	public enum ApiVersion 
-	{
+	public enum ApiVersion {
 		VERSION_1_0(1);
 
 		private int version;
 
-		private ApiVersion(int version)
-		{
+		private ApiVersion(int version) {
 			this.version = version;
 		}
 
 		private static ApiVersion[] values = null;
-		public static ApiVersion fromInt(int i) 
-		{
-			if(ApiVersion.values == null)
+
+		public static ApiVersion fromInt(int i) {
+			if (ApiVersion.values == null)
 				ApiVersion.values = ApiVersion.values();
-			for(ApiVersion v : values)
-				if(v.version == i)
+			for (ApiVersion v : values)
+				if (v.version == i)
 					return v;
 			return null;
 		}
-		public static int toInt(ApiVersion v)
-		{
+
+		public static int toInt(ApiVersion v) {
 			return v.version;
 		}
 	}
 
 	/**
-	 *  The current state of the connected TrackerDevice.
-	 */	
-	public enum TrackerState
-	{
-		TRACKER_CONNECTED(0),
-		TRACKER_NOT_CONNECTED(1),
-		TRACKER_CONNECTED_BADFW(2),
-		TRACKER_CONNECTED_NOUSB3(3),
-		TRACKER_CONNECTED_NOSTREAM(4);
+	 * The current state of the connected TrackerDevice.
+	 */
+	public enum TrackerState {
+		TRACKER_CONNECTED(0), TRACKER_NOT_CONNECTED(1), TRACKER_CONNECTED_BADFW(
+				2), TRACKER_CONNECTED_NOUSB3(3), TRACKER_CONNECTED_NOSTREAM(4);
 
 		private int trackerState;
 
-		private TrackerState(int trackerState) 
-		{
+		private TrackerState(int trackerState) {
 			this.trackerState = trackerState;
 		}
 
 		private static TrackerState[] values = null;
+
 		public static TrackerState fromInt(int i) {
-			if(TrackerState.values == null)
+			if (TrackerState.values == null)
 				TrackerState.values = TrackerState.values();
-			for(TrackerState state : values)
-				if(state.trackerState == i)
+			for (TrackerState state : values)
+				if (state.trackerState == i)
 					return state;
 			return null;
 		}
-		public static int toInt(TrackerState ts)
-		{
-			if(null != ts)
+
+		public static int toInt(TrackerState ts) {
+			if (null != ts)
 				return ts.trackerState;
 			else
 				return TRACKER_NOT_CONNECTED.trackerState;
-		}		
+		}
 	}
 
 	/**
-	 *  The current state of the connected TrackerDevice.
-	 */		
-	public enum FrameRate
-	{
-		FPS_30(30),
-		FPS_60(60);
+	 * The current state of the connected TrackerDevice.
+	 */
+	public enum FrameRate {
+		FPS_30(30), FPS_60(60);
 
 		private int frameRate;
 
-		private FrameRate(int frameRate)
-		{
+		private FrameRate(int frameRate) {
 			this.frameRate = frameRate;
 		}
 
 		private static FrameRate[] values = null;
+
 		public static FrameRate fromInt(int i) {
-			if(FrameRate.values == null) {
+			if (FrameRate.values == null) {
 				FrameRate.values = FrameRate.values();
 			}
-			for(FrameRate frate : values)
-				if(frate.frameRate == i)
+			for (FrameRate frate : values)
+				if (frate.frameRate == i)
 					return frate;
 			return null;
-		}		
+		}
+
+		public static int toInt(FrameRate fr) {
+			if (null != fr)
+				return fr.frameRate;
+			else
+				return 0;
+		}
 	}
 
 	/**
-	 *  Threaded broadcaster responsible for distributing GazeData update to all attached listeners.
+	 * Threaded broadcaster responsible for distributing GazeData update to all
+	 * attached listeners.
 	 */
-	private class GazeBroadcaster implements Runnable
-	{
+	private class GazeBroadcaster implements Runnable {
 		private boolean isBroadcasting;
 
-		public GazeBroadcaster()
-		{
+		public GazeBroadcaster() {
 		}
 
-		private void start()
-		{
+		private void start() {
 			isBroadcasting = true;
 			new Thread(this).start();
 		}
 
-		private void stop() 
-		{
+		private void stop() {
 			isBroadcasting = false;
-			synchronized (this)
-			{
+			synchronized (this) {
 				notify();
 			}
 		}
 
-		private boolean isBroadcasting()
-		{
+		private boolean isBroadcasting() {
 			return isBroadcasting;
 		}
 
 		@Override
-		public void run()
-		{
-			while(isBroadcasting)
-			{
-				try
-				{
-					//take latest from deque
+		public void run() {
+			while (isBroadcasting) {
+				try {
+					// take latest from deque
 					final GazeData gd = gazeDeque.takeLast();
 
-					synchronized (gazeListeners) 
-					{
-						for(final IGazeListener listener : gazeListeners)
+					synchronized (gazeListeners) {
+						for (final IGazeListener listener : gazeListeners)
 
-							threadPool.execute(new Runnable()
-							{
+							threadPool.execute(new Runnable() {
 								@Override
-								public void run() 
-								{
-									try 
-									{
+								public void run() {
+									try {
 										listener.onGazeUpdate(gd);
+									} catch (Exception e) {
+										System.out.println("Exception while calling GazeUpdateListener.onGazeUpdate() "
+												+ "on listener "
+												+ listener
+												+ ": "
+												+ e.getLocalizedMessage());
 									}
-									catch (Exception e) 
-									{
-										System.out.println("Exception while calling GazeUpdateListener.onGazeUpdate() " +
-												"on listener " + listener + ": " + e.getLocalizedMessage());
-									}									
 								}
 							});
 					}
-				} 
-				catch (Exception e)
-				{
-					System.out.println("Internal error while broadcasting GazeData");
+				} catch (Exception e) {
+					System.out
+							.println("Internal error while broadcasting GazeData");
 				}
 			}
 		}
 	}
 
 	/**
-	 *  Class responsible for sending 'heartbeats' to the underlying TET C# Client Tracker
-	 *  notifying that the client is alive.
-	 *  The Tracker Server defines the desired length of a heartbeat and is in this
-	 *  implementation automatically acquired through the Tracker API.
-	 */	
-	private class Heartbeat implements Runnable
-	{
+	 * Class responsible for sending 'heartbeats' to the underlying TET C#
+	 * Client Tracker notifying that the client is alive. The Tracker Server
+	 * defines the desired length of a heartbeat and is in this implementation
+	 * automatically acquired through the Tracker API.
+	 */
+	private class Heartbeat implements Runnable {
 		private boolean isAlive;
 
-		public Heartbeat()
-		{
+		public Heartbeat() {
 		}
 
-		private void start()
-		{
+		private void start() {
 			isAlive = true;
 			new Thread(this).start();
 		}
 
-		private void stop() 
-		{
+		private void stop() {
 			isAlive = false;
-			synchronized (this)
-			{
+			synchronized (this) {
 				notify();
 			}
 		}
 
-		private boolean isAlive()
-		{
+		private boolean isAlive() {
 			return isAlive;
 		}
 
 		@Override
-		public void run()
-		{
-			while(isAlive)
-			{
-				try
-				{
+		public void run() {
+			while (isAlive) {
+				try {
 					apiManager.requestHeartbeat();
 
 					Thread.sleep(heartbeatMillis);
-				} 
-				catch (Exception e)
-				{
-					System.out.println("Internal error while sending heartbeats");
+				} catch (Exception e) {
+					System.out
+							.println("Internal error while sending heartbeats");
 				}
 			}
 		}
 	}
-
 }

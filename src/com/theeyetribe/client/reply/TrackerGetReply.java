@@ -5,10 +5,8 @@ import com.theeyetribe.client.Protocol;
 import com.theeyetribe.client.data.CalibrationResult;
 import com.theeyetribe.client.data.GazeData;
 
-public class TrackerGetReply extends ReplyBase 
-{
-	public class Values
-	{
+public class TrackerGetReply extends ReplyBase {
+	public class Values {
 		public Boolean push;
 		@SerializedName(Protocol.TRACKER_HEARTBEATINTERVAL)
 		public Integer heartbeatInterval;

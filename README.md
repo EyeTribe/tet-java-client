@@ -5,9 +5,9 @@ Java SDK for The Eye Tribe Tracker
 Introduction
 ----
 
-This is the Java reference implementation for the EyeTribe Server. The implementation provides a simple Java interface for communicating with the server through the [TET API](http://dev.theeyetribe.com/api/). This should allow developers to get started quickly to focus their efforts on creating truly immersive and innovative apps using our eye tracking technology. 
+This is the Java SDK reference implementation for the EyeTribe Server. The implementation provides a simple Java interface for communicating with the server through the [TET API](http://dev.theeyetribe.com/api/). This should allow developers to get started quickly to focus their efforts on creating truly immersive and innovative apps using our eye tracking technology. 
 
-This version is to be considered **_alpha_**. Feedback and bug fix submissions are welcome.
+This version is to be considered **_beta_**. Feedback and bug fix submissions are welcome.
 
 Please visit our [developer website](http://dev.theeyetribe.com) for more information.
 
@@ -28,7 +28,12 @@ Build
 Samples
 ----
 
-There are currently no samples available for the Java SDK, but they will be added as they become available. For now, consult our [C# samples on GitHub](https://github.com/eyetribe) for inspiration as the C# reference implementation is very similar to Java. 
+There are currently no samples available for the Java SDK, but they will be added as they become available. For now, consult our [C# samples on GitHub](https://github.com/eyetribe) for inspiration as the C# SDK reference implementation is very similar to Java. 
+
+Tutorials
+----
+
+A simple guide to using this Java SDK is found in the [tutorials section](http://dev.theeyetribe.com/java/) of our developer website. More tutorials will be provided in the near future.
 
 
 API Reference
@@ -39,6 +44,12 @@ The complete API specification used by the Java SDK to communicate with the serv
 
 Changelog
 ----
+
+0.9.33 (2014-04-15)
+- Added support for listening to EyeTribe Server conneciton state (IConnectionStateListener)
+- Minor API timestamp change
+- Minor refactoring and formatting
+- Generel bug fixing and optimization
 
 0.9.27 (2014-02-12)
 - Fixed tab/space formatting
