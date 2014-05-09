@@ -3,7 +3,8 @@ package com.theeyetribe.client;
 /**
  * Tracker API constants
  */
-public class Protocol {
+public class Protocol
+{
 	public static final int STATUSCODE_CALIBRATION_UPDATE = 800;
 	public static final int STATUSCODE_SCREEN_UPDATE = 801;
 	public static final int STATUSCODE_TRACKER_UPDATE = 802;

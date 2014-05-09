@@ -25,15 +25,14 @@ Build
 2. To build, either import and build from Eclipse IDE (Eclipse project files included) or use Apache Ant to run included build.xml configuration.
 3. Alternatively, import source code into your favorite Java IDE and build from there.
 
+Documentation
+----
+Find documentation of this library at [TET Java Doc](http://eyetribe.github.io/tet-java-client).
+
 Samples
 ----
 
-There are currently no samples available for the Java SDK, but they will be added as they become available. For now, consult our [C# samples on GitHub](https://github.com/eyetribe) for inspiration as the C# SDK reference implementation is very similar to Java. 
-
-Tutorials
-----
-
-A simple guide to using this Java SDK is found in the [tutorials section](http://dev.theeyetribe.com/java/) of our developer website. More tutorials will be provided in the near future.
+There are currently no samples available for the Java SDK, but they will be added as they become available. For now, consult our [C# samples on GitHub](https://github.com/eyetribe) for inspiration as the C# reference implementation is very similar to Java. 
 
 
 API Reference
@@ -45,16 +44,25 @@ The complete API specification used by the Java SDK to communicate with the serv
 Changelog
 ----
 
+0.9.34 (2014-05-09)
+
+-	Improved documentation
+-	Fixed bug related to initialization lock
+-	Fixed bug related to broadcasting calibration updates
+
 0.9.33 (2014-04-15)
-- Added support for listening to EyeTribe Server conneciton state (IConnectionStateListener)
-- Minor API timestamp change
-- Minor refactoring and formatting
-- Generel bug fixing and optimization
+
+-	Added support for listening to EyeTribe Server conneciton state (IConnectionStateListener)
+-	Minor API timestamp change
+-	Minor refactoring and formatting
+-	Generel bug fixing and optimization
 
 0.9.27 (2014-02-12)
-- Fixed tab/space formatting
-- New methods to GazeUtils
-- Minor internal refactoring
+
+-	Fixed tab/space formatting
+-	New methods to GazeUtils
+-	Minor internal refactoring
 
 0.9.26 (2014-01-30)
-- Initial release
+
+-	Initial release

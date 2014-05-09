@@ -1,5 +1,7 @@
 package com.theeyetribe.client.data;
 
+import java.util.Arrays;
+
 import com.google.gson.annotations.SerializedName;
 import com.theeyetribe.client.Protocol;
 
@@ -7,7 +9,8 @@ import com.theeyetribe.client.Protocol;
  * CalibrationResult holds outcome of a calibration procedure. It defines if
  * calibration was successful or if certain calibration points needs resampling.
  */
-public class CalibrationResult {
+public class CalibrationResult
+{
 	/*
 	 * Was the calibration sucessful?
 	 */
@@ -36,7 +39,27 @@ public class CalibrationResult {
 	 */
 	public CalibrationPoint[] calibpoints;
 
-	public class CalibrationPoint {
+	@Override
+	public boolean equals(Object o) 
+	{
+		if ( this == o ) 
+			return true;
+
+		if ( !(o instanceof CalibrationResult) )
+			return false;
+
+		CalibrationResult other = (CalibrationResult) o;
+
+		return
+				result == other.result &&
+				Double.doubleToLongBits(averageErrorDegree) == Double.doubleToLongBits(other.averageErrorDegree) && 
+				Double.doubleToLongBits(averageErrorDegreeLeft) == Double.doubleToLongBits(other.averageErrorDegreeLeft) && 
+				Double.doubleToLongBits(averageErrorDegreeRight) == Double.doubleToLongBits(other.averageErrorDegreeRight) && 
+				Arrays.equals(calibpoints, other.calibpoints);
+	}
+
+	public class CalibrationPoint
+	{
 		/*
 		 * State defines that no data is available for calibration point
 		 */
@@ -75,9 +98,30 @@ public class CalibrationResult {
 
 		@SerializedName(Protocol.CALIBRESULT_STANDARD_DEVIATION_PIXELS)
 		public StandardDeviation standardDeviation = new StandardDeviation();
+
+		@Override
+		public boolean equals(Object o) 
+		{
+			if ( this == o ) 
+				return true;
+
+			if ( !(o instanceof CalibrationPoint) )
+				return false;
+
+			CalibrationPoint other = (CalibrationPoint) o;
+
+			return
+					state == other.state && 	
+					coordinates.equals(other.coordinates) && 					
+					meanEstimatedCoords.equals(other.meanEstimatedCoords) && 
+					accuracy.equals(other.accuracy) && 
+					meanError.equals(other.meanError)  && 
+					standardDeviation.equals(other.standardDeviation) ;
+		}
 	}
 
-	public class Accuracy {
+	public class Accuracy
+	{
 		/*
 		 * Accuracy in degrees
 		 */
@@ -95,9 +139,28 @@ public class CalibrationResult {
 		 */
 		@SerializedName(Protocol.CALIBRESULT_ACCURACY_RIGHT_DEGREES)
 		public Double accuracyDegreesRight = 0d;
+
+
+		@Override
+		public boolean equals(Object o) 
+		{
+			if ( this == o ) 
+				return true;
+
+			if ( !(o instanceof Accuracy) )
+				return false;
+
+			Accuracy other = (Accuracy) o;
+
+			return 
+					Double.doubleToLongBits(accuracyDegrees) == Double.doubleToLongBits(other.accuracyDegrees) && 
+					Double.doubleToLongBits(accuracyDegreesLeft) == Double.doubleToLongBits(other.accuracyDegreesLeft) && 
+					Double.doubleToLongBits(accuracyDegreesRight) == Double.doubleToLongBits(other.accuracyDegreesRight);
+		}
 	}
 
-	public class MeanError {
+	public class MeanError
+	{
 		/*
 		 * Mean error in pixels
 		 */
@@ -115,9 +178,27 @@ public class CalibrationResult {
 		 */
 		@SerializedName(Protocol.CALIBRESULT_MEAN_ERROR_RIGHT_PIXELS)
 		public Double meanErrorPixelsRight = 0d;
+
+		@Override
+		public boolean equals(Object o) 
+		{
+			if ( this == o ) 
+				return true;
+
+			if ( !(o instanceof MeanError) )
+				return false;
+
+			MeanError other = (MeanError) o;
+
+			return 
+					Double.doubleToLongBits(meanErrorPixels) == Double.doubleToLongBits(other.meanErrorPixels) && 
+					Double.doubleToLongBits(meanErrorPixelsLeft) == Double.doubleToLongBits(other.meanErrorPixelsLeft) && 
+					Double.doubleToLongBits(meanErrorPixelsRight) == Double.doubleToLongBits(other.meanErrorPixelsRight);
+		}
 	}
 
-	public class StandardDeviation {
+	public class StandardDeviation
+	{
 		/*
 		 * Average std deviation in pixels
 		 */
@@ -135,5 +216,22 @@ public class CalibrationResult {
 		 */
 		@SerializedName(Protocol.CALIBRESULT_STANDARD_DEVIATION_RIGHT_PIXELS)
 		public Double averageStandardDeviationPixelsRight = 0d;
+
+		@Override
+		public boolean equals(Object o) 
+		{
+			if ( this == o ) 
+				return true;
+
+			if ( !(o instanceof StandardDeviation) )
+				return false;
+
+			StandardDeviation other = (StandardDeviation) o;
+
+			return 
+					Double.doubleToLongBits(averageStandardDeviationPixels) == Double.doubleToLongBits(other.averageStandardDeviationPixels) && 
+					Double.doubleToLongBits(averageStandardDeviationPixelsLeft) == Double.doubleToLongBits(other.averageStandardDeviationPixelsLeft) && 
+					Double.doubleToLongBits(averageStandardDeviationPixelsRight) == Double.doubleToLongBits(other.averageStandardDeviationPixelsRight);
+		}		
 	}
 }

@@ -31,7 +31,7 @@
 		<unzip dest="bin">
 			<fileset dir="${basedir}/libs" includes="gson-2.2.4.jar" />
 		</unzip>
-		<jar destfile="${ant.project.name}.jar" basedir="bin"/>
+		<jar destfile="${ant.project.name}.jar" basedir="bin" />
 	</target>
 	<target name="build-subprojects" />
 	<target depends="init" name="build-project">
@@ -85,4 +85,24 @@
 			<report format="frames" todir="${junit.output.dir}" />
 		</junitreport>
 	</target>
+
+	<target name="generate-javadoc">
+		<javadoc 
+		    destdir="doc" 
+		    author="true" 
+		    version="true" 
+		    use="true"
+			windowtitle="TET Java SDK"			
+			>
+		    <classpath refid="TETJavaClient.classpath" />
+			<fileset dir="src" defaultexcludes="yes">
+				<include name="com/theeyetribe/client/**" />
+				<exclude name="com/theeyetribe/client/Protocol.java"/>
+                <exclude name="com/theeyetribe/client/GazeApiManager.java" />
+				<exclude name="com/theeyetribe/client/reply/**" />
+				<exclude name="com/theeyetribe/client/request/**" />
+			</fileset>
+		</javadoc>
+	</target>
+
 </project>
