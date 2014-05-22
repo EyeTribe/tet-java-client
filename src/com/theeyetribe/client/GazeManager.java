@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2013-present, The Eye Tribe. 
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the LICENSE file in the root directory of this source tree. 
+ *
+ */
+
 package com.theeyetribe.client;
 
 import java.net.HttpURLConnection;
@@ -133,10 +141,10 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 			//if already running, deactivate before starting anew		
 			if(isActivated())
 				deactivate();
-
+			
 			//lock calling thread while initializing
 			Object threadLock = Thread.currentThread();
-
+			
 			synchronized (threadLock)
 			{
 				synchronized (initializationLock)
@@ -144,12 +152,12 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 					if(!isActivated())
 					{
 						isInitializing = true;
-
+						
 						try 
 						{
 							//threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 							threadPool = Executors.newCachedThreadPool();
-
+							
 							//make sure we do not init networking on calling thread
 							threadPool.execute(new Runnable() 
 							{
@@ -160,7 +168,7 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 									{
 										apiManager = new GazeApiManager(GazeManager.this, GazeManager.this);
 										apiManager.connect(hostname, portnumber);
-
+										
 										if(apiManager.isConnected())
 										{
 											apiManager.requestTracker( mode, version);
@@ -173,10 +181,10 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 									}
 								}
 							});
-
+							
 							//We wait until above requests have been handled by server or timeout occurs
 							initializationLock.wait( INIT_TIME_DELAY_SECONDS * 1000);
-
+							
 							if(!isInitialized)
 							{
 								deactivate();
@@ -186,7 +194,7 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 							{
 								if(!heartbeatHandler.isAlive())
 									heartbeatHandler.start();
-
+								
 								isActive = true;
 							}
 						}
@@ -198,7 +206,7 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 					}
 				}
 			}
-
+			
 			return isActivated();
 		}
 	}
@@ -354,17 +362,17 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 	{ 
 		return clientMode;
 	}
-
+	
 	/**
 	 * Initiate a new calibration process. Must be called before any call to {@link #calibrationPointStart(int, int) CalibrationPointStart} 
 	 * or {@link #calibrationPointEnd() calibrationPointEnd}.
-	 * <p>
-	 * Any previous (and possible running) calibration process must be completed or aborted before calling this.
-	 * <p>
-	 * A full calibration process consists of a number of calls to {@link #calibrationPointStart(int, int) calibrationPointStart} and
-	 * {@link #calibrationPointEnd() calibrationPointEnd} matching the total number of calibration points set by the numCalibrationPoints
-	 * parameter.
-	 * 
+     * <p>
+     * Any previous (and possible running) calibration process must be completed or aborted before calling this.
+     * <p>
+     * A full calibration process consists of a number of calls to {@link #calibrationPointStart(int, int) calibrationPointStart} and
+     * {@link #calibrationPointEnd() calibrationPointEnd} matching the total number of calibration points set by the numCalibrationPoints
+     * parameter.
+     * 
 	 * @param numCalibrationPoints The number of calibration points that will be used in this calibration
 	 * @param listener The {@link com.theeyetribe.client.ICalibrationProcessHandler} instance that will receive callbacks during the
 	 * calibration process
@@ -381,14 +389,14 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 		else
 			System.out.println("TET Java Client not activated!");
 	}
-
+	
 	/**
 	 * Called for every calibration point during a calibration process. This call should be followed by a call to
 	 * {@link #calibrationPointEnd() calibrationPointEnd} 1-2 seconds later.
 	 * <p>
 	 * The calibration process must be initiated by a call to {@link #calibrationStart(int, ICalibrationProcessHandler) calibrationStart} before
 	 * calling this.
-	 * 
+     * 
 	 * @param x X coordinate of the calibration point
 	 * @param y Y coordinate of the calibration point
 	 */
@@ -406,7 +414,7 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 		else
 			System.out.println("TET Java Client not activated!");
 	}
-
+	
 	/**
 	 * Called for every calibration point during a calibration process. This should be called 1-2 seconds after 
 	 * {@link #calibrationPointStart(int, int) calibrationPointStart}.
@@ -545,7 +553,7 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 
 		return -1;
 	}
-
+	
 	/**
 	 * Checks if a given instance of {@link com.theeyetribe.client.IGazeListener} is currently attached.
 	 * 
@@ -807,9 +815,6 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 			gazeBroadcaster.stop();
 	}
 
-	long total;
-	long frameCount;
-
 	@Override
 	public void onGazeApiResponse(final String response)
 	{
@@ -827,10 +832,6 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 					{
 						if(reply.request.compareTo(Protocol.TRACKER_REQUEST_GET) == 0)
 						{
-							frameCount++; 
-
-							long timeStamp = System.currentTimeMillis();
-
 							JsonParser jsonParser = new JsonParser();
 							JsonObject jo = (JsonObject)jsonParser.parse(response);
 							TrackerGetReply tgr = gson.fromJson(jo, TrackerGetReply.class);
@@ -888,7 +889,7 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 								isCalibrating = tgr.values.isCalibrating;
 							if(null != tgr.values.isCalibrated)
 								isCalibrated = tgr.values.isCalibrated;
-
+							
 							//if defined in json response, then set
 							if (((JsonObject)jo.get(Protocol.KEY_VALUES)).has(Protocol.TRACKER_CALIBRATIONRESULT))
 							{
@@ -896,7 +897,7 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 								if(null == lastCalibrationResult || !lastCalibrationResult.equals(tgr.values.calibrationResult) )
 								{
 									lastCalibrationResult = tgr.values.calibrationResult;
-
+									
 									synchronized (calibrationResultListeners) 
 									{
 										for(final ICalibrationResultListener listener : calibrationResultListeners)
@@ -993,8 +994,6 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 									initializationLock.notify();
 								}
 							}
-
-							total += System.currentTimeMillis() - timeStamp;
 						}
 						else if(reply.request.compareTo(Protocol.TRACKER_REQUEST_SET) == 0)
 						{
@@ -1009,14 +1008,14 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 
 							if(null != calibrationListener)
 								try 
-							{
-									calibrationListener.onCalibrationStarted();
-							}
-							catch (Exception e) 
-							{
-								System.out.println("Exception while calling ICalibrationProcessHandler.onCalibrationStarted() " +
-										"on listener " + calibrationListener + ": " + e.getLocalizedMessage());
-							}
+								{
+										calibrationListener.onCalibrationStarted();
+								}
+								catch (Exception e) 
+								{
+									System.out.println("Exception while calling ICalibrationProcessHandler.onCalibrationStarted() " +
+											"on listener " + calibrationListener + ": " + e.getLocalizedMessage());
+								}
 						}
 						else if(reply.request.compareTo(Protocol.CALIBRATION_REQUEST_POINTSTART) == 0)
 						{
@@ -1043,14 +1042,14 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 								if (sampledCalibrationPoints == totalCalibrationPoints)
 									//Notify calibration listener that all calibration points have been sampled and the analysis of the calibration results has begun 
 									try
-								{
-										calibrationListener.onCalibrationProcessing();
-								}
-								catch (Exception e)
-								{
-									System.out.println("Exception while calling ICalibrationProcessHandler.OnCalibrationProcessing() on listener " +
-											calibrationListener + ": " + e.getLocalizedMessage());
-								}
+									{
+											calibrationListener.onCalibrationProcessing();
+									}
+									catch (Exception e)
+									{
+										System.out.println("Exception while calling ICalibrationProcessHandler.OnCalibrationProcessing() on listener " +
+												calibrationListener + ": " + e.getLocalizedMessage());
+									}
 							}
 
 							final CalibrationPointEndReply cper = gson.fromJson(response, CalibrationPointEndReply.class);

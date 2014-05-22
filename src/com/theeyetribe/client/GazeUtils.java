@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2013-present, The Eye Tribe. 
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the LICENSE file in the root directory of this source tree. 
+ *
+ */
+
 package com.theeyetribe.client;
 
 import com.theeyetribe.client.data.GazeData;
@@ -95,17 +103,17 @@ public class GazeUtils
 		if(null != leftEye && null != rightEye)
 		{
 			double dist = Math.abs(getDistancePoint2D(leftEye.pupilCenterCoordinates, rightEye.pupilCenterCoordinates));
-
+			
 			if (dist < _MinimumEyesDistance)
 				_MinimumEyesDistance = dist;
-
+			
 			if (dist > _MaximumEyesDistance)
 				_MaximumEyesDistance = dist;
-
+			
 			//return normalized
 			return dist / (_MaximumEyesDistance - _MinimumEyesDistance);
 		}
-
+		
 		return -1;
 	}
 
@@ -189,14 +197,14 @@ public class GazeUtils
 	{
 		Point2D normMap = getNormalizedCoords(point, screenWidth, screenHeight);
 
-		if (null != normMap)
-		{
-			//scale up and shift
-			normMap.x *= 2f;
-			normMap.x -= 1f;
-			normMap.y *= 2f;
-			normMap.y -= 1f;
-		}
+        if (null != normMap)
+        {
+            //scale up and shift
+            normMap.x *= 2f;
+            normMap.x -= 1f;
+            normMap.y *= 2f;
+            normMap.y -= 1f;
+        }
 
 		return normMap;
 	}

@@ -44,6 +44,11 @@ The complete API specification used by the Java SDK to communicate with the serv
 Changelog
 ----
 
+0.9.35 (2014-05-20)
+
+-	Updated license
+-	Fixed bug related to ICalibrationResultListener
+
 0.9.34 (2014-05-09)
 
 -	Improved documentation

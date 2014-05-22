@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2013-present, The Eye Tribe. 
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the LICENSE file in the root directory of this source tree. 
+ *
+ */
+
 package com.theeyetribe.client;
 
 import java.io.BufferedReader;
@@ -101,6 +109,7 @@ class GazeApiManager
 				{
 				Protocol.TRACKER_ISCALIBRATED,
 				Protocol.TRACKER_ISCALIBRATING,
+				Protocol.TRACKER_CALIBRATIONRESULT
 				};
 
 		request(gson.toJsonTree(gr, TrackerGetRequest.class).toString());
@@ -237,17 +246,17 @@ class GazeApiManager
 			outgoingStreamHandler = new OutgoingStreamHandler();
 			outgoingStreamHandler.start();
 		}
-		catch (IOException ioe)
-		{
-			System.out.println("Unable to open socket. Is EyeTribe Server running? Exception: " + ioe.getLocalizedMessage());
+        catch (IOException ioe)
+        {
+        	System.out.println("Unable to open socket. Is EyeTribe Server running? Exception: " + ioe.getLocalizedMessage());
 
-			//notify connection change
-			if (null != connectionListener)
-				connectionListener.onGazeApiConnectionStateChanged(false);
+            //notify connection change
+            if (null != connectionListener)
+                connectionListener.onGazeApiConnectionStateChanged(false);
 
-			close();
-			return false;
-		}
+            close();
+            return false;
+        }
 		catch (Exception e) 
 		{
 			System.out.println("Exception while establishing socket connection. Is EyeTribe Server running? Exception: " + e.getLocalizedMessage());
