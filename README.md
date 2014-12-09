@@ -5,9 +5,9 @@ Java SDK for The Eye Tribe Tracker
 Introduction
 ----
 
-This is the Java SDK reference implementation for the EyeTribe Server. The implementation provides a simple Java interface for communicating with the server through the [TET API](http://dev.theeyetribe.com/api/). This should allow developers to get started quickly to focus their efforts on creating truly immersive and innovative apps using our eye tracking technology. 
+This is the Java reference implementation for the EyeTribe Server. The implementation provides a simple Java interface for communicating with the server through the [TET API](http://dev.theeyetribe.com/api/). This should allow developers to get started quickly to focus their efforts on creating truly immersive and innovative apps using our eye tracking technology. 
 
-This version is to be considered **_beta_**. Feedback and bug fix submissions are welcome.
+This version is to be considered **_alpha_**. Feedback and bug fix submissions are welcome.
 
 Please visit our [developer website](http://dev.theeyetribe.com) for more information.
 
@@ -25,10 +25,6 @@ Build
 2. To build, either import and build from Eclipse IDE (Eclipse project files included) or use Apache Ant to run included build.xml configuration.
 3. Alternatively, import source code into your favorite Java IDE and build from there.
 
-Documentation
-----
-Find documentation of this library at [TET Java Doc](http://eyetribe.github.io/tet-java-client).
-
 Samples
 ----
 
@@ -43,31 +39,40 @@ The complete API specification used by the Java SDK to communicate with the serv
 
 Changelog
 ----
+0.9.49 (2014-12-09)
+
+- Ensured callback order of listener types during activation 
+- Ensured thread safety in singletons
+- Refactored internal blocking queues
+- More consistent stacktrace output on callback errors
+- Unified constructors and operators for all data types
+- Added utility methods to GazeData class
+- Updated Gson to 2.3
 
 0.9.35 (2014-05-20)
 
--	Updated license
--	Fixed bug related to ICalibrationResultListener
+-    Updated license
+-    Fixed bug related to ICalibrationResultListener
 
 0.9.34 (2014-05-09)
 
--	Improved documentation
--	Fixed bug related to initialization lock
--	Fixed bug related to broadcasting calibration updates
+-    Improved documentation
+-    Fixed bug related to initialization lock
+-    Fixed bug related to broadcasting calibration updates
 
 0.9.33 (2014-04-15)
 
--	Added support for listening to EyeTribe Server conneciton state (IConnectionStateListener)
--	Minor API timestamp change
--	Minor refactoring and formatting
--	Generel bug fixing and optimization
+-    Added support for listening to EyeTribe Server conneciton state (IConnectionStateListener)
+-    Minor API timestamp change
+-    Minor refactoring and formatting
+-    Generel bug fixing and optimization
 
 0.9.27 (2014-02-12)
 
--	Fixed tab/space formatting
--	New methods to GazeUtils
--	Minor internal refactoring
+- Fixed tab/space formatting
+- New methods to GazeUtils
+- Minor internal refactoring
 
 0.9.26 (2014-01-30)
 
--	Initial release
+- Initial release

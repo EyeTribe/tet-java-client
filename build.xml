@@ -10,10 +10,9 @@
 	<property name="debuglevel" value="source,lines,vars" />
 	<property name="target" value="1.6" />
 	<property name="source" value="1.6" />
-	<import file="custom_tasks.xml" />
 	<path id="TETJavaClient.classpath">
 		<pathelement location="bin" />
-		<pathelement location="libs/gson-2.2.4.jar" />
+		<pathelement location="libs/gson-2.3.jar" />
 	</path>
 	<target name="init">
 		<mkdir dir="bin" />
@@ -29,7 +28,7 @@
 	<target depends="clean" name="cleanall" />
 	<target depends="build-subprojects,build-project" name="build">
 		<unzip dest="bin">
-			<fileset dir="${basedir}/libs" includes="gson-2.2.4.jar" />
+			<fileset dir="${basedir}/libs" includes="gson-2.3.jar" />
 		</unzip>
 		<jar destfile="${ant.project.name}.jar" basedir="bin" />
 	</target>

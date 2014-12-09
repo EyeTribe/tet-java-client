@@ -13,6 +13,6 @@ package com.theeyetribe.client.request;
  */
 public class RequestBase
 {
-	public String category;
-	public String request;
+    public String category;
+    public String request;
 }
