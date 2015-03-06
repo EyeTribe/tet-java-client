@@ -26,4 +26,15 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>repo</id>
+            <url>https://github.com/kennelbound/maven/raw/master/release</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshot-repo</id>
+            <url>https://github.com/kennelbound/maven/raw/master/snapshot</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
