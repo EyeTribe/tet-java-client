@@ -24,6 +24,7 @@ import com.google.gson.JsonParser;
 import com.theeyetribe.client.GazeApiManager.IGazeApiConnectionListener;
 import com.theeyetribe.client.GazeApiManager.IGazeApiResponseListener;
 import com.theeyetribe.client.data.CalibrationResult;
+import com.theeyetribe.client.data.CalibrationResult.CalibrationPoint;
 import com.theeyetribe.client.data.GazeData;
 import com.theeyetribe.client.reply.CalibrationPointEndReply;
 import com.theeyetribe.client.reply.ReplyBase;
@@ -80,6 +81,8 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
     protected Integer screenResolutionHeight;
     protected Float screenPhysicalWidth;
     protected Float screenPhysicalHeight;
+
+    protected Gson gson;
 
     private GazeManager()
     {
@@ -170,7 +173,7 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
      */
     public boolean activate(final ApiVersion version, final ClientMode mode, final String hostname, final int portnumber)
     {
-        synchronized (Holder.INSTANCE)
+        synchronized (getInstance())
         {
             // lock calling thread while initializing
             Thread threadLock = Thread.currentThread();
@@ -209,7 +212,8 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
                                             apiManager.requestTracker(mode, version);
                                             apiManager.requestAllStates();
                                         }
-                                    } catch (Exception e)
+                                    }
+                                    catch (Exception e)
                                     {
                                         System.out.println("Exception while connecting to the EyeTribe Server: "
                                                 + e.getLocalizedMessage());
@@ -223,7 +227,8 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 
                             if (!isInitialized)
                             {
-                                deactivate();
+                                handleInitFailure();
+
                                 System.out.println("Error initializing GazeManager, is EyeTribe Server running?");
                             }
                             else
@@ -236,10 +241,13 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
                                 // notify connection listeners
                                 onGazeApiConnectionStateChanged(isActivated());
                             }
-                        } catch (Exception e)
+                        }
+                        catch (Exception e)
                         {
-                            deactivate();
-                            System.out.println("Error initializing GazeManager.");
+                            handleInitFailure();
+
+                            System.out.println("Error initializing GazeManager: " + e.getLocalizedMessage());
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -249,18 +257,58 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
         }
     }
 
-    /**
-     * Deactivates TET Java Client and all under lying routines. Should be called when a application closes down.
-     */
-    public void deactivate()
+    private void handleInitFailure()
     {
-        synchronized (Holder.INSTANCE)
+        synchronized (getInstance())
         {
             if (heartbeatHandler.isAlive())
                 heartbeatHandler.stop();
 
             if (null != apiManager)
                 apiManager.close();
+
+            if (null != gson)
+                gson = null;
+
+            if (isInitializing)
+            {
+                synchronized (initializationLock)
+                {
+                    isInitializing = false;
+                    isInitialized = false;
+                    initializationLock.notify();
+                }
+            }
+
+            if (null != threadPool && !threadPool.isShutdown())
+            {
+                try
+                {
+                    threadPool.shutdownNow();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * Deactivates TET Java Client and all under lying routines. Should be called when a application closes down.
+     */
+    public void deactivate()
+    {
+        synchronized (getInstance())
+        {
+            if (heartbeatHandler.isAlive())
+                heartbeatHandler.stop();
+
+            if (null != apiManager)
+                apiManager.close();
+
+            if (null != gson)
+                gson = null;
 
             clearListeners();
 
@@ -279,7 +327,8 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
                 try
                 {
                     threadPool.shutdownNow();
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     e.printStackTrace();
                 }
@@ -552,16 +601,19 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
     {
         if (null != listener)
         {
-            if (!gazeListeners.contains(listener))
+            synchronized (gazeListeners)
             {
-                // if first listener
-                if (gazeListeners.size() == 0)
+                if (!gazeListeners.contains(listener))
                 {
-                    if (!gazeBroadcaster.isBroadcasting())
-                        gazeBroadcaster.start();
-                }
+                    // if first listener
+                    if (gazeListeners.size() == 0)
+                    {
+                        if (!gazeBroadcaster.isBroadcasting())
+                            gazeBroadcaster.start();
+                    }
 
-                gazeListeners.add(listener);
+                    gazeListeners.add(listener);
+                }
             }
         }
     }
@@ -578,14 +630,17 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
 
         if (null != listener)
         {
-            if (gazeListeners.contains(listener))
-                result = gazeListeners.remove(listener);
-
-            // if no listeners
-            if (gazeListeners.size() == 0)
+            synchronized (gazeListeners)
             {
-                if (null != gazeBroadcaster && gazeBroadcaster.isBroadcasting())
-                    gazeBroadcaster.stop();
+                if (gazeListeners.contains(listener))
+                    result = gazeListeners.remove(listener);
+
+                // if no listeners
+                if (gazeListeners.size() == 0)
+                {
+                    if (null != gazeBroadcaster && gazeBroadcaster.isBroadcasting())
+                        gazeBroadcaster.stop();
+                }
             }
         }
 
@@ -839,385 +894,447 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
             @Override
             public void run()
             {
-                Gson gson = new Gson();
-                ReplyBase reply = gson.fromJson(response, ReplyBase.class);
-
-                if (reply.statuscode == HttpURLConnection.HTTP_OK)
+                try
                 {
-                    if (reply.category.compareTo(Protocol.CATEGORY_TRACKER) == 0)
+                    JsonParser jsonParser = new JsonParser();
+                    JsonObject jo = (JsonObject) jsonParser.parse(response);
+                    jsonParser = null;
+
+                    ReplyBase reply = gson.fromJson(jo, ReplyBase.class);
+
+                    if (reply.statuscode == HttpURLConnection.HTTP_OK)
                     {
-                        if (reply.request.compareTo(Protocol.TRACKER_REQUEST_GET) == 0)
+                        if (reply.category.compareTo(Protocol.CATEGORY_TRACKER) == 0)
                         {
-                            JsonParser jsonParser = new JsonParser();
-                            JsonObject jo = (JsonObject) jsonParser.parse(response);
-                            TrackerGetReply tgr = gson.fromJson(jo, TrackerGetReply.class);
-
-                            if (null != tgr.values.version)
-                                version = ApiVersion.fromInt(tgr.values.version);
-
-                            if (null != tgr.values.push)
+                            if (reply.request.compareTo(Protocol.TRACKER_REQUEST_GET) == 0)
                             {
-                                if (tgr.values.push)
-                                    clientMode = ClientMode.PUSH;
-                                else
-                                    clientMode = ClientMode.PULL;
-                            }
+                                TrackerGetReply tgr = gson.fromJson(jo, TrackerGetReply.class);
 
-                            if (null != tgr.values.heartbeatInterval)
-                                heartbeatMillis = tgr.values.heartbeatInterval;
+                                if (null != tgr.values.version)
+                                    version = ApiVersion.fromInt(tgr.values.version);
 
-                            if (null != tgr.values.frameRate)
-                                frameRate = FrameRate.fromInt(tgr.values.frameRate);
-
-                            if (null != tgr.values.trackerState)
-                            {
-                                // if tracker state changed, notify listeners
-                                if (tgr.values.trackerState != TrackerState.toInt(trackerState))
+                                if (null != tgr.values.push)
                                 {
-                                    trackerState = TrackerState.fromInt(tgr.values.trackerState);
+                                    if (tgr.values.push)
+                                        clientMode = ClientMode.PUSH;
+                                    else
+                                        clientMode = ClientMode.PULL;
+                                }
 
-                                    synchronized (trackerStateListeners)
+                                if (null != tgr.values.heartbeatInterval)
+                                    heartbeatMillis = tgr.values.heartbeatInterval;
+
+                                if (null != tgr.values.frameRate)
+                                    frameRate = FrameRate.fromInt(tgr.values.frameRate);
+
+                                if (null != tgr.values.trackerState)
+                                {
+                                    // if tracker state changed, notify listeners
+                                    if (null == trackerState
+                                            || tgr.values.trackerState != TrackerState.toInt(trackerState))
                                     {
-                                        for (final ITrackerStateListener listener : trackerStateListeners)
+                                        trackerState = TrackerState.fromInt(tgr.values.trackerState);
+
+                                        synchronized (trackerStateListeners)
                                         {
-                                            threadPool.execute(new Runnable()
+                                            for (final ITrackerStateListener listener : trackerStateListeners)
                                             {
-                                                @Override
-                                                public void run()
+                                                try
                                                 {
-                                                    try
+                                                    threadPool.execute(new Runnable()
                                                     {
-                                                        listener.onTrackerStateChanged(TrackerState.toInt(trackerState));
-                                                    } catch (Exception e)
-                                                    {
-                                                        System.out
-                                                                .println("Exception while calling ITrackerStateListener.OnTrackerConnectionChanged() on listener "
-                                                                        + listener + ": " + e.getLocalizedMessage());
-                                                        e.printStackTrace();
-                                                    }
+                                                        @Override
+                                                        public void run()
+                                                        {
+                                                            try
+                                                            {
+                                                                listener.onTrackerStateChanged(TrackerState
+                                                                        .toInt(trackerState));
+                                                            }
+                                                            catch (Exception e)
+                                                            {
+                                                                System.out.println("Exception while calling ITrackerStateListener.OnTrackerConnectionChanged() on listener "
+                                                                                + listener
+                                                                                + ": "
+                                                                                + e.getLocalizedMessage());
+                                                                e.printStackTrace();
+                                                            }
+                                                        }
+                                                    });
                                                 }
-                                            });
+                                                catch (Exception e)
+                                                {
+                                                    System.out.println("Exception while executing ThreadPool task: "
+                                                            + e.getLocalizedMessage());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (null != tgr.values.isCalibrating)
+                                    isCalibrating = tgr.values.isCalibrating;
+                                if (null != tgr.values.isCalibrated)
+                                    isCalibrated = tgr.values.isCalibrated;
+
+                                // if defined in json response, then set
+                                if (((JsonObject) jo.get(Protocol.KEY_VALUES)).has(Protocol.TRACKER_CALIBRATIONRESULT))
+                                {
+                                    // is calibration result different from current?
+                                    if (null == lastCalibrationResult
+                                            || !lastCalibrationResult.equals(tgr.values.calibrationResult))
+                                    {
+                                        lastCalibrationResult = tgr.values.calibrationResult;
+
+                                        synchronized (calibrationResultListeners)
+                                        {
+                                            for (final ICalibrationResultListener listener : calibrationResultListeners)
+                                            {
+                                                try
+                                                {
+                                                    threadPool.execute(new Runnable()
+                                                    {
+                                                        @Override
+                                                        public void run()
+                                                        {
+                                                            try
+                                                            {
+                                                                listener.onCalibrationChanged(isCalibrated,
+                                                                        lastCalibrationResult);
+                                                            }
+                                                            catch (Exception e)
+                                                            {
+                                                                System.out.println("Exception while calling ICalibrationResultListener.OnCalibrationChanged() on listener "
+                                                                                + listener
+                                                                                + ": "
+                                                                                + e.getLocalizedMessage());
+                                                                e.printStackTrace();
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                                catch (Exception e)
+                                                {
+                                                    System.out.println("Exception while executing ThreadPool task: "
+                                                            + e.getLocalizedMessage());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (null != tgr.values.screenResolutionWidth)
+                                    screenResolutionWidth = tgr.values.screenResolutionWidth;
+                                if (null != tgr.values.screenResolutionHeight)
+                                    screenResolutionHeight = tgr.values.screenResolutionHeight;
+                                if (null != tgr.values.screenPhysicalWidth)
+                                    screenPhysicalWidth = tgr.values.screenPhysicalWidth;
+                                if (null != tgr.values.screenPhysicalHeight)
+                                    screenPhysicalHeight = tgr.values.screenPhysicalHeight;
+                                if (null != tgr.values.screenIndex)
+                                {
+                                    // if screen index changed, broadcast to all
+                                    // listeners
+                                    if (tgr.values.screenIndex != screenIndex)
+                                    {
+                                        screenIndex = tgr.values.screenIndex;
+
+                                        synchronized (trackerStateListeners)
+                                        {
+                                            for (final ITrackerStateListener listener : trackerStateListeners)
+                                            {
+                                                try
+                                                {
+                                                    threadPool.execute(new Runnable()
+                                                    {
+                                                        @Override
+                                                        public void run()
+                                                        {
+                                                            try
+                                                            {
+                                                                listener.onScreenStatesChanged(screenIndex,
+                                                                        screenResolutionWidth, screenResolutionHeight,
+                                                                        screenPhysicalWidth, screenPhysicalHeight);
+                                                            }
+                                                            catch (Exception e)
+                                                            {
+                                                                System.out.println("Exception while calling ITrackerStateListener.OnScreenIndexChanged() on listener "
+                                                                                + listener
+                                                                                + ": "
+                                                                                + e.getLocalizedMessage());
+                                                                e.printStackTrace();
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                                catch (Exception e)
+                                                {
+                                                    System.out.println("Exception while executing ThreadPool task: "
+                                                            + e.getLocalizedMessage());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Add to high frequency broadcasting queue
+                                if (((JsonObject) jo.get(Protocol.KEY_VALUES)).has(Protocol.TRACKER_FRAME))
+                                {
+                                    // fixing timestamp based on string
+                                    // representation, Json 32bit int issue
+                                    // TODO: This will eventually be done serverside
+                                    if (null != tgr.values.frame.timeStampString
+                                            && !tgr.values.frame.timeStampString.isEmpty())
+                                    {
+                                        Date date;
+                                        try
+                                        {
+                                            date = sdf.parse(tgr.values.frame.timeStampString);
+                                            tgr.values.frame.timeStamp = date.getTime(); // UTC
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            // consume error
+                                        }
+                                    }
+
+                                    // make room in queue, if full
+                                    while (!gazeQueue.offer(tgr.values.frame))
+                                        gazeQueue.poll();
+                                }
+
+                                // Special routine used for initialization
+                                if (isInitializing)
+                                {
+                                    // we make sure response is inital get request and not a 'push mode' frame
+                                    if (!((JsonObject) jo.get(Protocol.KEY_VALUES)).has(Protocol.TRACKER_FRAME))
+                                    {
+                                        synchronized (initializationLock)
+                                        {
+                                            isInitializing = false;
+                                            isInitialized = true;
+                                            initializationLock.notify();
                                         }
                                     }
                                 }
                             }
-
-                            if (null != tgr.values.isCalibrating)
-                                isCalibrating = tgr.values.isCalibrating;
-                            if (null != tgr.values.isCalibrated)
-                                isCalibrated = tgr.values.isCalibrated;
-
-                            // if defined in json response, then set
-                            if (((JsonObject) jo.get(Protocol.KEY_VALUES)).has(Protocol.TRACKER_CALIBRATIONRESULT))
+                            else if (reply.request.compareTo(Protocol.TRACKER_REQUEST_SET) == 0)
                             {
+                                // do nothing
+                            }
+                        }
+                        else if (reply.category.compareTo(Protocol.CATEGORY_CALIBRATION) == 0)
+                        {
+                            if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_START) == 0)
+                            {
+                                isCalibrating = true;
+
+                                if (null != calibrationListener)
+                                    try
+                                    {
+                                        calibrationListener.onCalibrationStarted();
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        System.out.println("Exception while calling ICalibrationProcessHandler.onCalibrationStarted() "
+                                                        + "on listener "
+                                                        + calibrationListener
+                                                        + ": "
+                                                        + e.getLocalizedMessage());
+                                        e.printStackTrace();
+                                    }
+                            }
+                            else if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_POINTSTART) == 0)
+                            {
+
+                            }
+                            else if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_POINTEND) == 0)
+                            {
+                                ++sampledCalibrationPoints;
+
+                                if (null != calibrationListener)
+                                {
+                                    // Notify calibration listener that a new
+                                    // calibration point has been sampled
+                                    try
+                                    {
+                                        calibrationListener.onCalibrationProgress((float) sampledCalibrationPoints
+                                                / totalCalibrationPoints);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        System.out.println("Exception while calling ICalibrationProcessHandler.OnCalibrationProgress() on listener "
+                                                        + calibrationListener + ": " + e.getLocalizedMessage());
+                                        e.printStackTrace();
+                                    }
+
+                                    if (sampledCalibrationPoints == totalCalibrationPoints)
+                                        // Notify calibration listener that all
+                                        // calibration points have been sampled and
+                                        // the analysis of the calibration results
+                                        // has begun
+                                        try
+                                        {
+                                            calibrationListener.onCalibrationProcessing();
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            System.out.println("Exception while calling ICalibrationProcessHandler.OnCalibrationProcessing() on listener "
+                                                            + calibrationListener + ": " + e.getLocalizedMessage());
+                                            e.printStackTrace();
+                                        }
+                                }
+
+                                final CalibrationPointEndReply cper = gson.fromJson(jo, CalibrationPointEndReply.class);
+
+                                if (cper == null || cper.values.calibrationResult == null)
+                                    return; // not done with calibration yet
+
+                                isCalibrated = cper.values.calibrationResult.result;
+                                isCalibrating = !cper.values.calibrationResult.result;
+
+                                // Evaluate resample points
+                                for (CalibrationPoint calibPoint : cper.values.calibrationResult.calibpoints)
+                                {
+                                    if (calibPoint.state == CalibrationPoint.STATE_RESAMPLE
+                                            || calibPoint.state == CalibrationPoint.STATE_NO_DATA)
+                                    {
+                                        --sampledCalibrationPoints;
+                                    }
+                                }
+
                                 // is calibration result different from current?
                                 if (null == lastCalibrationResult
-                                        || !lastCalibrationResult.equals(tgr.values.calibrationResult))
+                                        || !lastCalibrationResult.equals(cper.values.calibrationResult))
                                 {
-                                    lastCalibrationResult = tgr.values.calibrationResult;
+                                    lastCalibrationResult = cper.values.calibrationResult;
 
                                     synchronized (calibrationResultListeners)
                                     {
                                         for (final ICalibrationResultListener listener : calibrationResultListeners)
                                         {
-                                            threadPool.execute(new Runnable()
+                                            try
                                             {
-                                                @Override
-                                                public void run()
+                                                threadPool.execute(new Runnable()
                                                 {
-                                                    try
+                                                    @Override
+                                                    public void run()
                                                     {
-                                                        listener.onCalibrationChanged(isCalibrated,
-                                                                lastCalibrationResult);
-                                                    } catch (Exception e)
-                                                    {
-                                                        System.out
-                                                                .println("Exception while calling ICalibrationResultListener.OnCalibrationChanged() on listener "
-                                                                        + listener + ": " + e.getLocalizedMessage());
-                                                        e.printStackTrace();
+                                                        try
+                                                        {
+                                                            listener.onCalibrationChanged(isCalibrated,
+                                                                    lastCalibrationResult);
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            System.out.println("Exception while calling ICalibrationResultListener.OnCalibrationChanged() on listener "
+                                                                            + listener + ": " + e.getLocalizedMessage());
+                                                            e.printStackTrace();
+                                                        }
                                                     }
-                                                }
-                                            });
+                                                });
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                System.out.println("Exception while executing ThreadPool task: "
+                                                        + e.getLocalizedMessage());
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            if (null != tgr.values.screenResolutionWidth)
-                                screenResolutionWidth = tgr.values.screenResolutionWidth;
-                            if (null != tgr.values.screenResolutionHeight)
-                                screenResolutionHeight = tgr.values.screenResolutionHeight;
-                            if (null != tgr.values.screenPhysicalWidth)
-                                screenPhysicalWidth = tgr.values.screenPhysicalWidth;
-                            if (null != tgr.values.screenPhysicalHeight)
-                                screenPhysicalHeight = tgr.values.screenPhysicalHeight;
-                            if (null != tgr.values.screenIndex)
-                            {
-                                // if screen index changed, broadcast to all
-                                // listeners
-                                if (tgr.values.screenIndex != screenIndex)
+                                if (null != calibrationListener)
                                 {
-                                    screenIndex = tgr.values.screenIndex;
-
-                                    synchronized (trackerStateListeners)
-                                    {
-                                        for (final ITrackerStateListener listener : trackerStateListeners)
-                                        {
-                                            threadPool.execute(new Runnable()
-                                            {
-                                                @Override
-                                                public void run()
-                                                {
-                                                    try
-                                                    {
-                                                        listener.onScreenStatesChanged(screenIndex,
-                                                                screenResolutionWidth, screenResolutionHeight,
-                                                                screenPhysicalWidth, screenPhysicalHeight);
-                                                    } catch (Exception e)
-                                                    {
-                                                        System.out
-                                                                .println("Exception while calling ITrackerStateListener.OnScreenIndexChanged() on listener "
-                                                                        + listener + ": " + e.getLocalizedMessage());
-                                                        e.printStackTrace();
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Add to high frequency broadcasting queue
-                            if (((JsonObject) jo.get(Protocol.KEY_VALUES)).has(Protocol.TRACKER_FRAME))
-                            {
-                                // fixing timestamp based on string
-                                // representation, Json 32bit int issue
-                                // TODO: This will eventually be done serverside
-                                if (null != tgr.values.frame.timeStampString
-                                        && !tgr.values.frame.timeStampString.isEmpty())
-                                {
-                                    Date date;
+                                    // Notify calibration listener that calibration
+                                    // results are ready for evaluation
                                     try
                                     {
-                                        date = sdf.parse(tgr.values.frame.timeStampString);
-                                        tgr.values.frame.timeStamp = date.getTime(); // UTC
-                                    } catch (Exception e)
-                                    {
-                                        // consume error
+                                        calibrationListener.onCalibrationResult(cper.values.calibrationResult);
                                     }
-                                }
-
-                                // make room in queue, if full
-                                while (!gazeQueue.offer(tgr.values.frame))
-                                    gazeQueue.poll();
-                            }
-
-                            // Special routine used for initialization
-                            if (isInitializing)
-                            {
-                                synchronized (initializationLock)
-                                {
-                                    isInitializing = false;
-                                    isInitialized = true;
-                                    initializationLock.notify();
-                                }
-                            }
-                        }
-                        else if (reply.request.compareTo(Protocol.TRACKER_REQUEST_SET) == 0)
-                        {
-                            // do nothing
-                        }
-                    }
-                    else if (reply.category.compareTo(Protocol.CATEGORY_CALIBRATION) == 0)
-                    {
-                        if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_START) == 0)
-                        {
-                            isCalibrating = true;
-
-                            if (null != calibrationListener)
-                                try
-                                {
-                                    calibrationListener.onCalibrationStarted();
-                                } catch (Exception e)
-                                {
-                                    System.out
-                                            .println("Exception while calling ICalibrationProcessHandler.onCalibrationStarted() "
-                                                    + "on listener "
-                                                    + calibrationListener
-                                                    + ": "
-                                                    + e.getLocalizedMessage());
-                                    e.printStackTrace();
-                                }
-                        }
-                        else if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_POINTSTART) == 0)
-                        {
-
-                        }
-                        else if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_POINTEND) == 0)
-                        {
-                            ++sampledCalibrationPoints;
-
-                            if (null != calibrationListener)
-                            {
-                                // Notify calibration listener that a new
-                                // calibration point has been sampled
-                                try
-                                {
-                                    calibrationListener.onCalibrationProgress((float) sampledCalibrationPoints
-                                            / totalCalibrationPoints);
-                                } catch (Exception e)
-                                {
-                                    System.out
-                                            .println("Exception while calling ICalibrationProcessHandler.OnCalibrationProgress() on listener "
-                                                    + calibrationListener + ": " + e.getLocalizedMessage());
-                                    e.printStackTrace();
-                                }
-
-                                if (sampledCalibrationPoints == totalCalibrationPoints)
-                                    // Notify calibration listener that all
-                                    // calibration points have been sampled and
-                                    // the analysis of the calibration results
-                                    // has begun
-                                    try
+                                    catch (Exception e)
                                     {
-                                        calibrationListener.onCalibrationProcessing();
-                                    } catch (Exception e)
-                                    {
-                                        System.out
-                                                .println("Exception while calling ICalibrationProcessHandler.OnCalibrationProcessing() on listener "
+                                        System.out.println("Exception while calling ICalibrationProcessHandler.OnCalibrationResult() on listener "
                                                         + calibrationListener + ": " + e.getLocalizedMessage());
                                         e.printStackTrace();
                                     }
-                            }
-
-                            final CalibrationPointEndReply cper = gson.fromJson(response,
-                                    CalibrationPointEndReply.class);
-
-                            if (cper == null || cper.values.calibrationResult == null)
-                                return; // not done with calibration yet
-
-                            isCalibrated = cper.values.calibrationResult.result;
-                            isCalibrating = !cper.values.calibrationResult.result;
-
-                            // is calibration result different from current?
-                            if (isCalibrated
-                                    && (null == lastCalibrationResult || !lastCalibrationResult
-                                            .equals(cper.values.calibrationResult)))
-                            {
-                                lastCalibrationResult = cper.values.calibrationResult;
-
-                                synchronized (calibrationResultListeners)
-                                {
-                                    for (final ICalibrationResultListener listener : calibrationResultListeners)
-                                    {
-                                        threadPool.execute(new Runnable()
-                                        {
-                                            @Override
-                                            public void run()
-                                            {
-                                                try
-                                                {
-                                                    listener.onCalibrationChanged(isCalibrated, lastCalibrationResult);
-                                                } catch (Exception e)
-                                                {
-                                                    System.out
-                                                            .println("Exception while calling ICalibrationResultListener.OnCalibrationChanged() on listener "
-                                                                    + listener + ": " + e.getLocalizedMessage());
-                                                    e.printStackTrace();
-                                                }
-                                            }
-                                        });
-                                    }
                                 }
                             }
-
-                            if (null != calibrationListener)
+                            else if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_ABORT) == 0)
                             {
-                                // Notify calibration listener that calibration
-                                // results are ready for evaluation
-                                try
-                                {
-                                    calibrationListener.onCalibrationResult(cper.values.calibrationResult);
-                                } catch (Exception e)
-                                {
-                                    System.out
-                                            .println("Exception while calling ICalibrationProcessHandler.OnCalibrationResult() on listener "
-                                                    + calibrationListener + ": " + e.getLocalizedMessage());
-                                    e.printStackTrace();
-                                }
+                                isCalibrating = false;
+
+                                // restore states of last calibration if any
+                                if (isActivated())
+                                    apiManager.requestCalibrationStates();
                             }
-                        }
-                        else if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_ABORT) == 0)
-                        {
-                            isCalibrating = false;
+                            else if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_CLEAR) == 0)
+                            {
+                                isCalibrated = false;
+                                isCalibrating = false;
+                                lastCalibrationResult = null;
+                            }
 
-                            // restore states of last calibration if any
-                            if (isActivated())
-                                apiManager.requestCalibrationStates();
                         }
-                        else if (reply.request.compareTo(Protocol.CALIBRATION_REQUEST_CLEAR) == 0)
+                        else if (reply.category.compareTo(Protocol.CATEGORY_HEARTBEAT) == 0)
                         {
-                            isCalibrated = false;
-                            isCalibrating = false;
-                            lastCalibrationResult = null;
+                            // do nothing
                         }
+                        else
+                        {
+                            ReplyFailed rf = gson.fromJson(jo, ReplyFailed.class);
 
-                    }
-                    else if (reply.category.compareTo(Protocol.CATEGORY_HEARTBEAT) == 0)
-                    {
-                        // do nothing
+                            System.out.println("Request FAILED");
+                            System.out.println("Category: " + rf.category);
+                            System.out.println("Request: " + rf.request);
+                            System.out.println("StatusCode: " + rf.statuscode);
+                            System.out.println("StatusMessage: " + rf.values.statusMessage);
+                        }
                     }
                     else
                     {
-                        ReplyFailed rf = gson.fromJson(response, ReplyFailed.class);
+                        ReplyFailed rf = gson.fromJson(jo, ReplyFailed.class);
 
-                        System.out.println("Request FAILED");
-                        System.out.println("Category: " + rf.category);
-                        System.out.println("Request: " + rf.request);
-                        System.out.println("StatusCode: " + rf.statuscode);
-                        System.out.println("StatusMessage: " + rf.values.statusMessage);
+                        /*
+                         * JSON Message status code is different from HttpURLConnection.HTTP_OK. Check if special TET
+                         * specific status code before handling error
+                         */
+
+                        switch (rf.statuscode)
+                        {
+                        case Protocol.STATUSCODE_CALIBRATION_UPDATE:
+                            // The calibration state has changed, clients should
+                            // update themselves
+                            if (isActivated())
+                                apiManager.requestCalibrationStates();
+                            break;
+
+                        case Protocol.STATUSCODE_SCREEN_UPDATE:
+                            // The primary screen index has changed, clients should
+                            // update themselves
+                            if (isActivated())
+                                apiManager.requestScreenStates();
+                            break;
+
+                        case Protocol.STATUSCODE_TRACKER_UPDATE:
+                            // The connected Tracker Device has changed state,
+                            // clients should update themselves
+                            if (isActivated())
+                                apiManager.requestTrackerState();
+                            break;
+
+                        default:
+                            System.out.println("Request FAILED");
+                            System.out.println("Category: " + rf.category);
+                            System.out.println("Request: " + rf.request);
+                            System.out.println("StatusCode: " + rf.statuscode);
+                            System.out.println("StatusMessage: " + rf.values.statusMessage);
+                            break;
+                        }
                     }
                 }
-                else
+                catch (Exception e)
                 {
-                    ReplyFailed rf = gson.fromJson(response, ReplyFailed.class);
-
-                    /*
-                     * JSON Message status code is different from HttpURLConnection.HTTP_OK. Check if special TET
-                     * specific status code before handling error
-                     */
-
-                    switch (rf.statuscode)
-                    {
-                    case Protocol.STATUSCODE_CALIBRATION_UPDATE:
-                        // The calibration state has changed, clients should
-                        // update themselves
-                        if (isActivated())
-                            apiManager.requestCalibrationStates();
-                        break;
-
-                    case Protocol.STATUSCODE_SCREEN_UPDATE:
-                        // The primary screen index has changed, clients should
-                        // update themselves
-                        if (isActivated())
-                            apiManager.requestScreenStates();
-                        break;
-
-                    case Protocol.STATUSCODE_TRACKER_UPDATE:
-                        // The connected Tracker Device has changed state,
-                        // clients should update themselves
-                        if (isActivated())
-                            apiManager.requestTrackerState();
-                        break;
-
-                    default:
-                        System.out.println("Request FAILED");
-                        System.out.println("Category: " + rf.category);
-                        System.out.println("Request: " + rf.request);
-                        System.out.println("StatusCode: " + rf.statuscode);
-                        System.out.println("StatusMessage: " + rf.values.statusMessage);
-                        break;
-                    }
+                    System.out.println("Exception while executing ThreadPool task: " + e.getLocalizedMessage());
                 }
             }
         });
@@ -1233,23 +1350,30 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
             {
                 for (final IConnectionStateListener listener : connectionStateListeners)
                 {
-                    threadPool.execute(new Runnable()
+                    try
                     {
-                        @Override
-                        public void run()
+                        threadPool.execute(new Runnable()
                         {
-                            try
+                            @Override
+                            public void run()
                             {
-                                listener.onConnectionStateChanged(isConnected);
-                            } catch (Exception e)
-                            {
-                                System.out
-                                        .println("Exception while calling IConnectionStateListener.onConnectionStateChanged() on listener "
-                                                + listener + ": " + e.getLocalizedMessage());
-                                e.printStackTrace();
+                                try
+                                {
+                                    listener.onConnectionStateChanged(isConnected);
+                                }
+                                catch (Exception e)
+                                {
+                                    System.out.println("Exception while calling IConnectionStateListener.onConnectionStateChanged() on listener "
+                                                    + listener + ": " + e.getLocalizedMessage());
+                                    e.printStackTrace();
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+                    catch (Exception e)
+                    {
+                        System.out.println("Exception while executing ThreadPool task: " + e.getLocalizedMessage());
+                    }
                 }
             }
         }
@@ -1435,7 +1559,8 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
                                      * breakpoints set client-side in this callback
                                      */
                                     listener.onGazeUpdate(gd);
-                                } catch (Exception e)
+                                }
+                                catch (Exception e)
                                 {
                                     System.out.println("Exception while calling IGazeListener.onGazeUpdate() "
                                             + "on listener " + listener + ": " + e.getLocalizedMessage());
@@ -1443,10 +1568,12 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
                                 }
                             }
                         }
-                    } catch (InterruptedException ie)
+                    }
+                    catch (InterruptedException ie)
                     {
                         // consume
-                    } catch (Exception e)
+                    }
+                    catch (Exception e)
                     {
                         System.out.println("Internal error while broadcasting GazeData");
                     }
@@ -1502,7 +1629,8 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
                         apiManager.requestHeartbeat();
 
                         Thread.sleep(heartbeatMillis);
-                    } catch (Exception e)
+                    }
+                    catch (Exception e)
                     {
                         System.out.println("Internal error while sending heartbeats");
                     }

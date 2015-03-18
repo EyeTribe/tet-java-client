@@ -8,6 +8,8 @@
 
 package com.theeyetribe.client.data;
 
+import com.theeyetribe.client.utils.HashUtils;
+
 /**
  * 2D point with double precision used for gaze control routines
  */
@@ -49,6 +51,15 @@ public class Point2D
 
         return Double.doubleToLongBits(x) == Double.doubleToLongBits(other.x)
                 && Double.doubleToLongBits(y) == Double.doubleToLongBits(other.y);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 571;
+        hash = hash * 2777 + HashUtils.hash(x);
+        hash = hash * 2777 + HashUtils.hash(y);
+        return hash;
     }
 
     public Point2D add(Point2D p2)

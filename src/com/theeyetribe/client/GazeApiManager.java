@@ -48,6 +48,8 @@ class GazeApiManager
 
     private BlockingQueue<String> requestQueue;
 
+    private Gson gson;
+
     public GazeApiManager(IGazeApiResponseListener responseListener)
     {
         this(responseListener, null);
@@ -57,12 +59,12 @@ class GazeApiManager
     {
         this.responseListener = responseListener;
         this.connectionListener = connectionListener;
+        this.gson = new Gson();
         this.requestQueue = new LinkedBlockingQueue<String>();
     }
 
     public void requestTracker(ClientMode mode, ApiVersion version)
     {
-        Gson gson = new Gson();
         TrackerSetRequest gr = new TrackerSetRequest();
 
         gr.values.version = ApiVersion.toInt(version);
@@ -73,38 +75,36 @@ class GazeApiManager
 
     public void requestAllStates()
     {
-        Gson gson = new Gson();
         TrackerGetRequest gr = new TrackerGetRequest();
 
-        gr.values = new String[] { Protocol.TRACKER_HEARTBEATINTERVAL, Protocol.TRACKER_ISCALIBRATED,
-                Protocol.TRACKER_ISCALIBRATING, Protocol.TRACKER_TRACKERSTATE, Protocol.TRACKER_SCREEN_INDEX,
-                Protocol.TRACKER_SCREEN_RESOLUTION_WIDTH, Protocol.TRACKER_SCREEN_RESOLUTION_HEIGHT,
-                Protocol.TRACKER_SCREEN_PHYSICAL_WIDTH, Protocol.TRACKER_SCREEN_PHYSICAL_HEIGHT,
-                Protocol.TRACKER_CALIBRATIONRESULT, Protocol.TRACKER_FRAMERATE, Protocol.TRACKER_VERSION,
-                Protocol.TRACKER_MODE_PUSH };
+        gr.values = new String[]
+        { Protocol.TRACKER_HEARTBEATINTERVAL, Protocol.TRACKER_ISCALIBRATED, Protocol.TRACKER_ISCALIBRATING,
+                Protocol.TRACKER_TRACKERSTATE, Protocol.TRACKER_SCREEN_INDEX, Protocol.TRACKER_SCREEN_RESOLUTION_WIDTH,
+                Protocol.TRACKER_SCREEN_RESOLUTION_HEIGHT, Protocol.TRACKER_SCREEN_PHYSICAL_WIDTH,
+                Protocol.TRACKER_SCREEN_PHYSICAL_HEIGHT, Protocol.TRACKER_CALIBRATIONRESULT,
+                Protocol.TRACKER_FRAMERATE, Protocol.TRACKER_VERSION, Protocol.TRACKER_MODE_PUSH };
 
         request(gson.toJsonTree(gr, TrackerGetRequest.class).toString());
     }
 
     public void requestCalibrationStates()
     {
-        Gson gson = new Gson();
         TrackerGetRequest gr = new TrackerGetRequest();
 
         gr.category = Protocol.CATEGORY_TRACKER;
         gr.request = Protocol.TRACKER_REQUEST_GET;
-        gr.values = new String[] { Protocol.TRACKER_ISCALIBRATED, Protocol.TRACKER_ISCALIBRATING,
-                Protocol.TRACKER_CALIBRATIONRESULT };
+        gr.values = new String[]
+        { Protocol.TRACKER_ISCALIBRATED, Protocol.TRACKER_ISCALIBRATING, Protocol.TRACKER_CALIBRATIONRESULT };
 
         request(gson.toJsonTree(gr, TrackerGetRequest.class).toString());
     }
 
     public void requestScreenStates()
     {
-        Gson gson = new Gson();
         TrackerGetRequest gr = new TrackerGetRequest();
 
-        gr.values = new String[] { Protocol.TRACKER_SCREEN_INDEX, Protocol.TRACKER_SCREEN_RESOLUTION_WIDTH,
+        gr.values = new String[]
+        { Protocol.TRACKER_SCREEN_INDEX, Protocol.TRACKER_SCREEN_RESOLUTION_WIDTH,
                 Protocol.TRACKER_SCREEN_RESOLUTION_HEIGHT, Protocol.TRACKER_SCREEN_PHYSICAL_WIDTH,
                 Protocol.TRACKER_SCREEN_PHYSICAL_HEIGHT };
 
@@ -113,17 +113,16 @@ class GazeApiManager
 
     public void requestTrackerState()
     {
-        Gson gson = new Gson();
         TrackerGetRequest gr = new TrackerGetRequest();
 
-        gr.values = new String[] { Protocol.TRACKER_TRACKERSTATE, Protocol.TRACKER_FRAMERATE };
+        gr.values = new String[]
+        { Protocol.TRACKER_TRACKERSTATE, Protocol.TRACKER_FRAMERATE };
 
         request(gson.toJsonTree(gr, TrackerGetRequest.class).toString());
     }
 
     public void requestHeartbeat()
     {
-        Gson gson = new Gson();
         RequestBase gr = new RequestBase();
 
         gr.category = Protocol.CATEGORY_HEARTBEAT;
@@ -133,7 +132,6 @@ class GazeApiManager
 
     public void requestCalibrationStart(int pointcount)
     {
-        Gson gson = new Gson();
         CalibrationStartRequest gr = new CalibrationStartRequest();
 
         gr.values.pointcount = pointcount;
@@ -143,7 +141,6 @@ class GazeApiManager
 
     public void requestCalibrationPointStart(int x, int y)
     {
-        Gson gson = new Gson();
         CalibrationPointStartRequest gr = new CalibrationPointStartRequest();
 
         gr.values.x = x;
@@ -154,7 +151,6 @@ class GazeApiManager
 
     public void requestCalibrationPointEnd()
     {
-        Gson gson = new Gson();
         RequestBase gr = new RequestBase();
 
         gr.category = Protocol.CATEGORY_CALIBRATION;
@@ -165,7 +161,6 @@ class GazeApiManager
 
     public void requestCalibrationAbort()
     {
-        Gson gson = new Gson();
         RequestBase gr = new RequestBase();
 
         gr.category = Protocol.CATEGORY_HEARTBEAT;
@@ -176,7 +171,6 @@ class GazeApiManager
 
     public void requestCalibrationClear()
     {
-        Gson gson = new Gson();
         RequestBase gr = new RequestBase();
 
         gr.category = Protocol.CATEGORY_HEARTBEAT;
@@ -187,7 +181,6 @@ class GazeApiManager
 
     public void requestScreenSwitch(int screenIndex, int screenResW, int screenResH, float screenPsyW, float screenPsyH)
     {
-        Gson gson = new Gson();
         TrackerSetRequest gr = new TrackerSetRequest();
 
         gr.category = Protocol.CATEGORY_TRACKER;
@@ -221,7 +214,8 @@ class GazeApiManager
 
             outgoingStreamHandler = new OutgoingStreamHandler();
             outgoingStreamHandler.start();
-        } catch (IOException ioe)
+        }
+        catch (IOException ioe)
         {
             System.out.println("Unable to open socket. Is EyeTribe Server running? Exception: "
                     + ioe.getLocalizedMessage());
@@ -229,10 +223,10 @@ class GazeApiManager
             close();
 
             return false;
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
-            System.out
-                    .println("Exception while establishing socket connection. Is EyeTribe Server running? Exception: "
+            System.out.println("Exception while establishing socket connection. Is EyeTribe Server running? Exception: "
                             + e.getLocalizedMessage());
             close();
             return false;
@@ -245,14 +239,21 @@ class GazeApiManager
     {
         try
         {
+            if (null != socket)
+                try
+                {
+                    socket.close();
+                }
+                catch (Exception e)
+                {
+                    // consume
+                }
+
             if (null != incomingStreamHandler)
                 incomingStreamHandler.stop();
 
             if (null != outgoingStreamHandler)
                 outgoingStreamHandler.stop();
-
-            if (null != socket)
-                socket.close();
 
             // notify connection change
             if (null != connectionListener)
@@ -260,7 +261,9 @@ class GazeApiManager
 
             if (null != requestQueue)
                 requestQueue.clear();
-        } catch (Exception e)
+
+        }
+        catch (Exception e)
         {
             System.out.println("Error closing socket: " + e.getMessage());
         }
@@ -293,13 +296,9 @@ class GazeApiManager
 
         private void stop()
         {
-            try
+            synchronized (this)
             {
-                if (null != reader)
-                    reader.close();
-            } catch (IOException e)
-            {
-                e.printStackTrace();
+                runner.interrupt();
             }
         }
 
@@ -316,23 +315,33 @@ class GazeApiManager
 
                 while (!Thread.interrupted())
                 {
-                    while (reader.ready())
+                    while ((response = reader.readLine()) != null)
                     {
-                        response = reader.readLine();
-
-                        if (null != response && !response.isEmpty() && null != responseListener)
+                        if (!response.isEmpty() && null != responseListener)
                         {
                             responseListener.onGazeApiResponse(response);
                         }
                     }
                 }
-            } catch (IOException ioe)
+            }
+            catch (IOException ioe)
             {
                 // consume
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
-                System.out
-                        .println("Exception while etablishing incoming socket connection: " + e.getLocalizedMessage());
+                System.out.println("Exception while etablishing incoming socket connection: " + e.getLocalizedMessage());
+            }
+            finally
+            {
+                try
+                {
+                    reader.close();
+                }
+                catch (Exception e2)
+                {
+                    // consume
+                }
             }
         }
     }
@@ -383,14 +392,13 @@ class GazeApiManager
 
                         if (numWriteAttempt > 0)
                             numWriteAttempt = 0;
-                    } catch (IOException ioe)
+                    }
+                    catch (IOException ioe)
                     {
-                        // Has writing to socket failed and may server be
-                        // disconnected?
+                        // Has writing to socket failed and may server be disconnected?
                         if (numWriteAttempt++ >= NUM_WRITE_ATTEMPTS_BEFORE_FAIL)
                         {
-                            // server must be disconnected, shut down network
-                            // layer
+                            // server must be disconnected, shut down network layer
                             GazeApiManager.this.close();
 
                             break;
@@ -402,22 +410,25 @@ class GazeApiManager
                         }
                     }
                 }
-            } catch (InterruptedException e)
+            }
+            catch (InterruptedException e)
             {
                 // consume
-            } catch (Exception e)
-            {
-                System.out
-                        .println("Exception while etablishing outgoing socket connection: " + e.getLocalizedMessage());
             }
-
-            try
+            catch (Exception e)
             {
-                if (null != writer)
+                System.out.println("Exception while etablishing outgoing socket connection: " + e.getLocalizedMessage());
+            }
+            finally
+            {
+                try
+                {
                     writer.close();
-            } catch (IOException e)
-            {
-                e.printStackTrace();
+                }
+                catch (Exception e2)
+                {
+                    // consume
+                }
             }
         }
     }

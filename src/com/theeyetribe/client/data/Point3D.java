@@ -8,6 +8,8 @@
 
 package com.theeyetribe.client.data;
 
+import com.theeyetribe.client.utils.HashUtils;
+
 /**
  * 3D point with double precision used for gaze control routines
  */
@@ -47,6 +49,14 @@ public class Point3D extends Point2D
         Point3D other = (Point3D) o;
 
         return super.equals(other) && Double.doubleToLongBits(z) == Double.doubleToLongBits(other.z);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = super.hashCode();
+        hash = hash * 2777 + HashUtils.hash(z);
+        return hash;
     }
 
     public Point3D add(Point3D p2)

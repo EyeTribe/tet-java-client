@@ -12,6 +12,7 @@ import java.util.Arrays;
 
 import com.google.gson.annotations.SerializedName;
 import com.theeyetribe.client.Protocol;
+import com.theeyetribe.client.utils.HashUtils;
 
 /**
  * CalibrationResult holds outcome of a calibration procedure. It defines if calibration was successful or if certain
@@ -65,6 +66,23 @@ public class CalibrationResult
                 && Double.doubleToLongBits(averageErrorDegreeRight) == Double
                         .doubleToLongBits(other.averageErrorDegreeRight)
                 && Arrays.equals(calibpoints, other.calibpoints);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 347;
+        hash = hash * 199 + HashUtils.hash(result);
+        hash = hash * 199 + HashUtils.hash(averageErrorDegree);
+        hash = hash * 199 + HashUtils.hash(averageErrorDegreeLeft);
+        hash = hash * 199 + HashUtils.hash(averageErrorDegreeRight);
+
+        int hc = calibpoints.length;
+        for (CalibrationPoint cp : calibpoints)
+            hc = hc * 199 + cp.hashCode();
+        hash += hc;
+
+        return hash;
     }
 
     public class CalibrationPoint
@@ -123,6 +141,19 @@ public class CalibrationResult
                     && meanEstimatedCoords.equals(other.meanEstimatedCoords) && accuracy.equals(other.accuracy)
                     && meanError.equals(other.meanError) && standardDeviation.equals(other.standardDeviation);
         }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 157;
+            hash = hash * 953 + HashUtils.hash(state);
+            hash = hash * 953 + coordinates.hashCode();
+            hash = hash * 953 + meanEstimatedCoords.hashCode();
+            hash = hash * 953 + accuracy.hashCode();
+            hash = hash * 953 + meanError.hashCode();
+            hash = hash * 953 + standardDeviation.hashCode();
+            return hash;
+        }
     }
 
     public class Accuracy
@@ -161,6 +192,16 @@ public class CalibrationResult
                             .doubleToLongBits(other.accuracyDegreesLeft)
                     && Double.doubleToLongBits(accuracyDegreesRight) == Double
                             .doubleToLongBits(other.accuracyDegreesRight);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 7;
+            hash = hash * 29 + HashUtils.hash(accuracyDegrees);
+            hash = hash * 29 + HashUtils.hash(accuracyDegreesLeft);
+            hash = hash * 29 + HashUtils.hash(accuracyDegreesRight);
+            return hash;
         }
     }
 
@@ -201,6 +242,16 @@ public class CalibrationResult
                     && Double.doubleToLongBits(meanErrorPixelsRight) == Double
                             .doubleToLongBits(other.meanErrorPixelsRight);
         }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = hash * 37 + HashUtils.hash(meanErrorPixels);
+            hash = hash * 37 + HashUtils.hash(meanErrorPixelsLeft);
+            hash = hash * 37 + HashUtils.hash(meanErrorPixelsRight);
+            return hash;
+        }
     }
 
     public class StandardDeviation
@@ -240,6 +291,16 @@ public class CalibrationResult
                             .doubleToLongBits(other.averageStandardDeviationPixelsLeft)
                     && Double.doubleToLongBits(averageStandardDeviationPixelsRight) == Double
                             .doubleToLongBits(other.averageStandardDeviationPixelsRight);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 3;
+            hash = hash * 19 + HashUtils.hash(averageStandardDeviationPixels);
+            hash = hash * 19 + HashUtils.hash(averageStandardDeviationPixelsLeft);
+            hash = hash * 19 + HashUtils.hash(averageStandardDeviationPixelsRight);
+            return hash;
         }
     }
 }
