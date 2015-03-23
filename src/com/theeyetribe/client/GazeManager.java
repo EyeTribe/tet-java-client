@@ -896,6 +896,9 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
             {
                 try
                 {
+                    if(null == gson)
+                        gson = new Gson();
+                    
                     JsonParser jsonParser = new JsonParser();
                     JsonObject jo = (JsonObject) jsonParser.parse(response);
                     jsonParser = null;
@@ -1626,7 +1629,8 @@ public class GazeManager implements IGazeApiResponseListener, IGazeApiConnection
                 {
                     try
                     {
-                        apiManager.requestHeartbeat();
+                        if (null != apiManager && apiManager.isConnected())
+                            apiManager.requestHeartbeat();
 
                         Thread.sleep(heartbeatMillis);
                     }
