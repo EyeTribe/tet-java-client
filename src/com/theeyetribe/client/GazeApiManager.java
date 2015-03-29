@@ -163,7 +163,7 @@ class GazeApiManager
     {
         RequestBase gr = new RequestBase();
 
-        gr.category = Protocol.CATEGORY_HEARTBEAT;
+        gr.category = Protocol.CATEGORY_CALIBRATION;
         gr.request = Protocol.CALIBRATION_REQUEST_ABORT;
 
         request(gson.toJson(gr));
@@ -173,7 +173,7 @@ class GazeApiManager
     {
         RequestBase gr = new RequestBase();
 
-        gr.category = Protocol.CATEGORY_HEARTBEAT;
+        gr.category = Protocol.CATEGORY_CALIBRATION;
         gr.request = Protocol.CALIBRATION_REQUEST_CLEAR;
 
         request(gson.toJson(gr));
