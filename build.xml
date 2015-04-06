@@ -12,7 +12,7 @@
 	<property name="source" value="1.6" />
 	<path id="TETJavaClient.classpath">
 		<pathelement location="bin" />
-		<pathelement location="libs/gson-2.3.jar" />
+		<pathelement location="libs/gson-2.3.1.jar" />
 	</path>
 	<target name="init">
 		<mkdir dir="bin" />
@@ -28,7 +28,7 @@
 	<target depends="clean" name="cleanall" />
 	<target depends="build-subprojects,build-project" name="build">
 		<unzip dest="bin">
-			<fileset dir="${basedir}/libs" includes="gson-2.3.jar" />
+			<fileset dir="${basedir}/libs" includes="gson-2.3.1.jar" />
 		</unzip>
 		<jar destfile="${ant.project.name}.jar" basedir="bin" />
 	</target>

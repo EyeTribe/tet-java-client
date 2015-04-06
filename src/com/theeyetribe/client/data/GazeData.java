@@ -8,8 +8,14 @@
 
 package com.theeyetribe.client.data;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.theeyetribe.client.Protocol;
+import com.theeyetribe.client.utils.HashUtils;
 
 /**
  * Contains eye tracking results of a single frame. It holds a state that defines the quality of the current tracking
@@ -65,15 +71,21 @@ public class GazeData
     @SerializedName(Protocol.FRAME_FIXATION)
     public Boolean isFixated = false;
 
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
     public GazeData()
     {
         timeStamp = System.currentTimeMillis();
+
+        Date date = new Date(timeStamp);
+        timeStampString = sdf.format(date);
     }
 
     public GazeData(GazeData other)
     {
         this.state = other.state;
         this.timeStamp = other.timeStamp;
+        this.timeStampString = other.timeStampString;
 
         this.rawCoordinates = new Point2D(other.rawCoordinates);
         this.smoothedCoordinates = new Point2D(other.smoothedCoordinates);
@@ -93,6 +105,7 @@ public class GazeData
 
             return this.state.intValue() == other.state.intValue()
                     && this.timeStamp.longValue() == other.timeStamp.longValue()
+                    && this.timeStampString.equals(other.timeStampString)
                     && this.rawCoordinates.equals(other.rawCoordinates)
                     && this.smoothedCoordinates.equals(other.smoothedCoordinates) && this.leftEye.equals(other.leftEye)
                     && this.rightEye.equals(other.rightEye)
@@ -102,10 +115,26 @@ public class GazeData
         return false;
     }
 
+    @Override
+    public int hashCode()
+    {
+        int hash = 2039;
+        hash = hash * 1553 + HashUtils.hash(state);
+        hash = hash * 1553 + HashUtils.hash(timeStamp);
+        hash = hash * 1553 + timeStampString.hashCode();
+        hash = hash * 1553 + rawCoordinates.hashCode();
+        hash = hash * 1553 + smoothedCoordinates.hashCode();
+        hash = hash * 1553 + leftEye.hashCode();
+        hash = hash * 1553 + rightEye.hashCode();
+        hash = hash * 1553 + HashUtils.hash(isFixated);
+        return hash;
+    }
+
     public void set(GazeData other)
     {
         this.state = other.state;
         this.timeStamp = other.timeStamp;
+        this.timeStampString = other.timeStampString;
 
         this.rawCoordinates = new Point2D(other.rawCoordinates);
         this.smoothedCoordinates = new Point2D(other.smoothedCoordinates);
@@ -209,6 +238,17 @@ public class GazeData
             }
 
             return false;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int hash = 337;
+            hash = hash * 797 + rawCoordinates.hashCode();
+            hash = hash * 797 + smoothedCoordinates.hashCode();
+            hash = hash * 797 + pupilCenterCoordinates.hashCode();
+            hash = hash * 797 + HashUtils.hash(pupilSize);
+            return hash;
         }
     }
 }
