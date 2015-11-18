@@ -1,15 +1,9 @@
 ![The Eye Tribe](tet_logo.png)
 
-<p>
-EyeTribe Java SDK for the EyeTribe Dev Kit
+Java SDK for the EyeTribe Dev Kit
 ====
-<p>
-
 
 This is the Java library implementation for the [EyeTribe Dev Kit](https://theeyetribe.com/products/). This reference implementation provides a Java interface for communicating with the EyeTribe Server through the open [EyeTribe API](http://dev.theeyetribe.com/api/). The library allow developers to get started quickly and focus their efforts on creating truly immersive and innovative apps using our eye tracking technology. 
-
-
-
 
 Documentation
 ----
@@ -22,12 +16,12 @@ An essential part of using the [EyeTribe Dev Kit](https://theeyetribe.com/produc
 
 ![Steps of the JavaFX calibration samples](jfx_sample.png)
 
-This library holds a sample implementation of a Calibration UI using [JavaFX](docs.oracle.com/javase/8/javafx/get-started-tutorial/jfx-overview.htm). Find this under [./javafx-sample](https://github.com/EyeTribe/tet-java-client/tree/master/javafx-sample). This sample runs on all platforms supported by the [EyeTribe Dev Kit](https://theeyetribe.com/products/) that have Java 8 version 65 or higher installed.
+This library holds a sample implementation of a Calibration UI using [JavaFX](docs.oracle.com/javase/8/javafx/get-started-tutorial/jfx-overview.htm). Find source code for this under [./javafx-sample](https://github.com/EyeTribe/tet-java-client/tree/master/javafx-sample) or download the prebuilt [EyeTribeJavaFx](https://github.com/EyeTribe/tet-java-client/releases). This sample runs on all platforms supported by the [EyeTribe Dev Kit](https://theeyetribe.com/products/) that have Java 8 version 65 or higher installed.
 
 
 Building (optional)
 ----
-You can use the prebuilt version of this library though Maven. Should you wish to build it yourself, please follow the below instructions:
+A prebuilt version of the library is available under [releases](https://github.com/EyeTribe/tet-java-client/releases). The EyeTribe Java SDK is backwards compatible to Java 6. Should you wish to build it yourself, please follow the below instructions:
 
 Prerequisites:
 
