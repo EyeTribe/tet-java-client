@@ -1,2 +1,5 @@
-com.theeyetribe.client
-com.theeyetribe.client.data
+com.theeyetribe.clientsdk
+com.theeyetribe.clientsdk.data
+com.theeyetribe.clientsdk.request
+com.theeyetribe.clientsdk.response
+com.theeyetribe.clientsdk.utils
