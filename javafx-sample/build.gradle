@@ -1,0 +1,40 @@
+apply from: 'javafx.plugin'
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.google.guava:guava:18.+'
+    compile 'org.controlsfx:controlsfx:8.40.10'
+    compile 'com.google.code.findbugs:jsr305:2.+'
+}
+
+jar {
+    archivesBaseName = 'EyeTribeJavaFx'
+
+    //we include everything from 'libs' folder
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+
+    //but exclude javafx classes
+    exclude('javafx/**', 'netscape/**', 'com/sun/**')
+}
+
+javafx
+{
+    // Points to JDK and its JavaFX libraries, also declares target runtime JDK
+    javaRuntime = System.getenv("JAVA8_HOME")
+    
+    // Application name and ID presented by target OS
+    appID 'EyeTribeJavaFx'
+    appName 'EyeTribe JavaFx'
+    
+    // Main class of application
+    mainClass 'com.theeyetribe.javafx.Main'
+    
+    // JVM arguments, system properties, application command line arguments
+    jvmArgs = ['-XX:+AggressiveOpts', '-XX:CompileThreshold=1']
+    systemProperties = ['prism.disableRegionCaching':'true']
+    arguments = ['-l', '--fast']
+
+    signingMode 'release'
+}
+
+

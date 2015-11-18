@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" styleClass="dark-pane" stylesheets="@styles.css"
+            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.theeyetribe.javafx.scenes.SceneCalibrationController">
+    <center>
+        <StackPane fx:id="innerRoot" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="1900.0"
+                   BorderPane.alignment="CENTER">
+            <children>
+                <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
+                    <children>
+                        <Group fx:id="calibPoint" opacity="0.0">
+                            <children>
+                                <Circle fx:id="circle" fill="WHITE" radius="40.0" stroke="#333333" strokeWidth="3.0"/>
+                                <Circle fill="#ffffff00" radius="8.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="4.0"/>
+                            </children>
+                        </Group>
+                    </children>
+                </AnchorPane>
+                <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
+                    <children>
+                        <Label fx:id="instruct" alignment="CENTER" styleClass="instruct-txt" text="%label.calib.instruc" textAlignment="CENTER"
+                               StackPane.alignment="CENTER">
+                            <padding>
+                                <Insets bottom="10.0" left="10.0"/>
+                            </padding>
+                            <font>
+                                <Font size="48.0"/>
+                            </font>
+                        </Label>
+                        <ProgressIndicator fx:id="progress" maxHeight="300" maxWidth="300" StackPane.alignment="CENTER"/>
+                    </children>
+                </StackPane>
+            </children>
+        </StackPane>
+    </center>
+    <left>
+        <Pane prefWidth="10.0" styleClass="border-pane" BorderPane.alignment="CENTER"/>
+    </left>
+    <right>
+        <Pane prefWidth="10.0" styleClass="border-pane" BorderPane.alignment="CENTER"/>
+    </right>
+    <bottom>
+        <Pane prefHeight="10.0" styleClass="border-pane" BorderPane.alignment="CENTER"/>
+    </bottom>
+    <top>
+        <StackPane prefHeight="70.0" prefWidth="200.0" styleClass="border-pane" BorderPane.alignment="CENTER">
+            <children>
+                <ImageView fitHeight="150.0" fitWidth="300.0" layoutX="14.0" layoutY="20.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER_LEFT">
+                    <image>
+                        <Image url="@tet_logo_top.png"/>
+                    </image>
+                    <StackPane.margin>
+                        <Insets left="10.0"/>
+                    </StackPane.margin>
+                </ImageView>
+                <Button layoutX="1856.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleCloseButtonAction" prefHeight="50.0" prefWidth="50.0" styleClass="topbutton"
+                        text="X" StackPane.alignment="CENTER_RIGHT">
+                    <opaqueInsets>
+                        <Insets/>
+                    </opaqueInsets>
+                    <StackPane.margin>
+                        <Insets right="10.0"/>
+                    </StackPane.margin>
+                </Button>
+            </children>
+        </StackPane>
+    </top>
+</BorderPane>

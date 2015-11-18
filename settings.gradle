@@ -1,0 +1,4 @@
+rootProject.name = 'eyetribe-java'
+include 'sdk'
+include 'javafx-sample'
+

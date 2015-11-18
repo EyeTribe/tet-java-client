@@ -1,99 +1,68 @@
-Java SDK for the EyeTribe Dev Kit
+![The Eye Tribe](tet_logo.png)
+
+<p>
+EyeTribe Java SDK for the EyeTribe Dev Kit
 ====
 <p>
 
-Introduction
-----
 
-This is the Java library implementation for the EyeTribe Dev Kit. This reference implementation provides a simple Java interface for communicating with the EyeTribe Server through our open [TET API](http://dev.theeyetribe.com/api/). This should allow developers to get started quickly to focus their efforts on creating truly immersive and innovative apps using our eye tracking technology. 
-
-This version is to be considered **_beta_**. Feedback and bug fix submissions are welcome.
-
-Please visit our [developer website](http://dev.theeyetribe.com) for documentation and tutorials. Please use our [public forum](http://theeyetribe.com/forum) for questions and support.
+This is the Java library implementation for the [EyeTribe Dev Kit](https://theeyetribe.com/products/). This reference implementation provides a Java interface for communicating with the EyeTribe Server through the open [EyeTribe API](http://dev.theeyetribe.com/api/). The library allow developers to get started quickly and focus their efforts on creating truly immersive and innovative apps using our eye tracking technology. 
 
 
-Dependencies
-----
-
-The implementation is Java 6 compliant for backwards compatibility and [Android OS](http://developer.android.com) support. The library uses [google-gson](http://code.google.com/p/google-gson/) for JSON parsing.
-
-
-Build
-----
-
-1. Install [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads) (and optionally [Eclipse for Java](http://www.eclipse.org/downloads/)) 
-2. To build, either import and build from Eclipse IDE (Eclipse project files included) or use Apache Ant to run included *build.xml* configuration.
-3. Alternatively, import source code into your favorite Java IDE and build from there.
-
-
-Tutorials
-----
-
-A simple guide to using this Java SDK is found in the [tutorials section](http://dev.theeyetribe.com/java/) of our developer website. More tutorials will be provided in the near future.
-
-
-Samples
-----
-
-There are currently no samples available for the Java SDK, but they will be added as they become available. For now, consult our [C# samples on GitHub](https://github.com/eyetribe) for inspiration as the C# reference implementation is very similar to Java. 
 
 
 Documentation
 ----
-Find documentation of this library at [EyeTribe Java SDK Doc](http://eyetribe.github.io/tet-java-client).
+Find documentation of this library at [EyeTribe Java SDK Doc](http://eyetribe.github.io/tet-java-client). The EyeTribe API reference is found at [Eye Tribe Developer Website](http://dev.theeyetribe.com/api/).
 
 
-API Reference
+Samples
+----
+An essential part of using the [EyeTribe Dev Kit](https://theeyetribe.com/products/) is 'calibrating the system'. Doing so involves creating a UI that  supports this library and guides the user through a series of mandatory steps.
+
+![Steps of the JavaFX calibration samples](jfx_sample.png)
+
+This library holds a sample implementation of a Calibration UI using [JavaFX](docs.oracle.com/javase/8/javafx/get-started-tutorial/jfx-overview.htm). Find this under [./javafx-sample](https://github.com/EyeTribe/tet-java-client/tree/master/javafx-sample). This sample runs on all platforms supported by the [EyeTribe Dev Kit](https://theeyetribe.com/products/) that have Java 8 version 65 or higher installed.
+
+
+Building (optional)
+----
+You can use the prebuilt version of this library though Maven. Should you wish to build it yourself, please follow the below instructions:
+
+Prerequisites:
+
+- Download & install [Java JDK 6](http://www.oracle.com/technetwork/java/javase/downloads). Set environment variable 'JAVA6_HOME' to '${your.jdk6.path}'.
+- Download & install [Java JDK 8](http://www.oracle.com/technetwork/java/javase/downloads). Set environment variable 'JAVA\_HOME' and 'JAVA8\_HOME' to '${your.jdk8.path}'.
+- Download & install [InjelliJ IDEA](https://www.jetbrains.com/idea/) or [Gradle](http://gradle.org/).
+
+To build:
+
+- Import Gradle project to [InjelliJ IDEA](https://www.jetbrains.com/idea/).
+- Set project language level to 8 in 'Module Setting -> Project'
+- Run gradle task 'sdk:jar'
+- Alternatively run task 'sdk:jar' using [Gradle](http://gradle.org/) from the commandline.
+
+
+Proguard
+----
+If you choose to build yourself and are using [Proguard](http://proguard.sourceforge.net/) for obfuscation, be sure to add the following options. 
+
+    -keepattributes Signature, *Annotation*
+    -keep class sun.misc.Unsafe { *; }
+    -keep class com.theeyetribe.clientsdk.response.* { *; }
+    -keep class com.theeyetribe.clientsdk.request.* { *; }
+    -keep class com.theeyetribe.clientsdk.data.* { *; }
+    -dontwarn java.lang.invoke.*
+    -dontwarn com.google.**
+
+Getting Help
 ----
 
-The complete API specification used by the Java SDK to communicate with the server is available on our [developer website](http://dev.theeyetribe.com/api/).
+- **Have questions or need support?** Visit our [developer forum](http://theeyetribe.com/forum/), to find answers to your questions and share your experiences with others developers.
+- **Have a bug to report?** Open a [new issue](https://github.com/EyeTribe/tet-java-client/issues) and tell us what you are experiencing. Please add library version and full log if possible.
+- **Have a feature request?** Either open a [new issue](https://github.com/EyeTribe/tet-java-client/issues) or post in our [developer forum](http://theeyetribe.com/forum/). Tell us what feature you are missing and what it should do. 
 
-
-Changelog
+Feedback
 ----
-0.9.56 (2015-03-18)
 
-- Added *hashCode()* implementation for all public data types
-- Fixing bugs associated to *CalibrationPoint* resampling
-- Clearing *Listener* types now requires explicit call to *GazeManager.deactivate()*
-- Minimizing object allocation
-- Fixed network initialization and deinitialization bugs
-- Updated Gson to 2.3.1
-
-0.9.49 (2014-12-09)
-
-- Ensured callback order of listener types during activation 
-- Ensured thread safety in singletons
-- Refactored internal blocking queues
-- More consistent stacktrace output on callback errors
-- Unified constructors and operators for all data types
-- Added utility methods to GazeData class
-- Updated Gson to 2.3
-
-0.9.35 (2014-05-20)
-
--    Updated license
--    Fixed bug related to ICalibrationResultListener
-
-0.9.34 (2014-05-09)
-
--    Improved documentation
--    Fixed bug related to initialization lock
--    Fixed bug related to broadcasting calibration updates
-
-0.9.33 (2014-04-15)
-
--    Added support for listening to EyeTribe Server conneciton state (IConnectionStateListener)
--    Minor API timestamp change
--    Minor refactoring and formatting
--    Generel bug fixing and optimization
-
-0.9.27 (2014-02-12)
-
-- Fixed tab/space formatting
-- New methods to GazeUtils
-- Minor internal refactoring
-
-0.9.26 (2014-01-30)
-
-- Initial release
+If you like using this library, please consider sending out a tweet mentioning [@TheEyeTribe](twitter.com/theeyetribe), announce your app in our [developer forum](http://theeyetribe.com/forum/), or email [support@theeyetribe.com](mailto:support@theeyetribe.com) to let us know.

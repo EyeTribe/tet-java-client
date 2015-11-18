@@ -1,0 +1,44 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'me.tatarka:gradle-retrolambda:3.2.3'
+    }
+}
+
+apply plugin: 'me.tatarka.retrolambda'
+
+retrolambda {
+    jdk System.getenv("JAVA8_HOME")
+    oldJdk System.getenv("JAVA6_HOME")
+    javaVersion JavaVersion.VERSION_1_6
+}
+
+apply plugin: 'java'
+
+group = 'com.theeyetribe'
+version = '0.9.60'
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile 'com.google.code.gson:gson:2.3.1'
+    compile 'org.jetbrains:annotations:+'
+}
+
+jar {
+    archivesBaseName = 'eyetribe-java'
+
+    //we include dependencies in jar
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+jar.outputs.upToDateWhen {false}
+
+task deployJar() << {
+    copy {
+        from jar.archivePath
+        into file('../javafx-sample/libs').absolutePath
+    }
+}
+jar.finalizedBy(deployJar)

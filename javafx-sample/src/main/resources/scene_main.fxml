@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import org.controlsfx.control.Rating?>
+
+<BorderPane id="pane" fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/8"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.theeyetribe.javafx.scenes.SceneMainController">
+    <center>
+        <StackPane fx:id="innerRoot" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="1900.0"
+                   BorderPane.alignment="CENTER">
+            <children>
+                <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
+                    <children>
+                        <ImageView fx:id="eyeLeft" fitHeight="150.0" fitWidth="200.0" pickOnBounds="false" preserveRatio="true" visible="false">
+                            <image>
+                                <Image url="@eye.png"/>
+                            </image>
+                        </ImageView>
+                        <ImageView fx:id="eyeRight" fitHeight="150.0" fitWidth="200.0" pickOnBounds="false" preserveRatio="true" visible="false">
+                            <image>
+                                <Image url="@eye.png"/>
+                            </image>
+                        </ImageView>
+                    </children>
+                </AnchorPane>
+                <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
+                    <children>
+                        <ImageView fx:id="gazeIndicator" fitHeight="100.0" fitWidth="100.0" pickOnBounds="false" preserveRatio="true"
+                                   visible="false">
+                            <image>
+                                <Image url="@gaze_indicator.png"/>
+                            </image>
+                        </ImageView>
+                    </children>
+                </AnchorPane>
+                <StackPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
+                    <children>
+                        <HBox alignment="TOP_RIGHT" prefHeight="112.0" prefWidth="360.0">
+                            <padding>
+                                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+                            </padding>
+                            <children>
+                                <Rating fx:id="rating" disable="true" max="4" maxHeight="72" maxWidth="320" orientation="HORIZONTAL" partialRating="false" rating="0"
+                                        visible="false"/>
+                            </children>
+                        </HBox>
+                        <Button fx:id="connectBtn" alignment="CENTER" mnemonicParsing="false" onAction="#handleConnectButtonAction" styleClass="whitebutton" text="%btn.connect"
+                                textAlignment="CENTER" visible="false" StackPane.alignment="BOTTOM_RIGHT">
+                            <StackPane.margin>
+                                <Insets bottom="75.0" right="75.0"/>
+                            </StackPane.margin>
+                        </Button>
+                        <Button fx:id="calibrationBtn" alignment="CENTER" mnemonicParsing="false" onAction="#handleCalibrationButtonAction" styleClass="whitebutton"
+                                text="%btn.calibrate" textAlignment="CENTER" visible="false" StackPane.alignment="BOTTOM_LEFT">
+                            <StackPane.margin>
+                                <Insets bottom="75.0" left="75.0"/>
+                            </StackPane.margin>
+                        </Button>
+                        <Button fx:id="evaluateBtn" alignment="CENTER" mnemonicParsing="false" onAction="#handleEvaluationButtonAction" styleClass="redbutton" text="%btn.evaluate"
+                                textAlignment="CENTER" visible="false" StackPane.alignment="BOTTOM_RIGHT">
+                            <StackPane.margin>
+                                <Insets bottom="75.0" right="75.0"/>
+                            </StackPane.margin>
+                        </Button>
+                        <Label fx:id="connect" alignment="CENTER" styleClass="connect-txt" text="%label.connect.instruc" textAlignment="CENTER" visible="false"
+                               StackPane.alignment="CENTER">
+                            <padding>
+                                <Insets bottom="10.0" left="10.0"/>
+                            </padding>
+                            <font>
+                                <Font size="48.0"/>
+                            </font>
+                        </Label>
+                        <Label fx:id="fpsLabel" alignment="CENTER" styleClass="fps-txt" text="\%label.fps" textFill="WHITE" StackPane.alignment="BOTTOM_LEFT">
+                            <padding>
+                                <Insets bottom="10.0" left="10.0"/>
+                            </padding>
+                            <font>
+                                <Font size="24.0"/>
+                            </font>
+                        </Label>
+                        <ProgressIndicator fx:id="progress" maxHeight="300" maxWidth="300" StackPane.alignment="CENTER"/>
+                    </children>
+                </StackPane>
+            </children>
+        </StackPane>
+    </center>
+    <left>
+        <Pane prefWidth="10.0" styleClass="border-pane" BorderPane.alignment="CENTER"/>
+    </left>
+    <right>
+        <Pane prefWidth="10.0" styleClass="border-pane" BorderPane.alignment="CENTER"/>
+    </right>
+    <bottom>
+        <Pane prefHeight="10.0" styleClass="border-pane" BorderPane.alignment="CENTER"/>
+    </bottom>
+    <top>
+        <StackPane prefHeight="70.0" styleClass="border-pane" BorderPane.alignment="CENTER">
+            <children>
+                <ImageView fitHeight="150.0" fitWidth="300.0" layoutX="14.0" layoutY="20.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER_LEFT">
+                    <image>
+                        <Image url="@tet_logo_top.png"/>
+                    </image>
+                    <StackPane.margin>
+                        <Insets left="10.0"/>
+                    </StackPane.margin>
+                </ImageView>
+                <Button layoutX="1856.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleCloseButtonAction" prefHeight="50.0" prefWidth="50.0" styleClass="topbutton"
+                        text="X" StackPane.alignment="CENTER_RIGHT">
+                    <opaqueInsets>
+                        <Insets/>
+                    </opaqueInsets>
+                    <StackPane.margin>
+                        <Insets right="10.0"/>
+                    </StackPane.margin>
+                </Button>
+            </children>
+        </StackPane>
+    </top>
+</BorderPane>

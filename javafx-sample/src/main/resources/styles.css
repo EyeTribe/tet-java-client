@@ -1,0 +1,118 @@
+#pane{
+    -fx-background-color: #ECECEC;
+}
+
+.whitebutton{
+    -fx-font-size: 24pt;
+    -fx-font-family: "Arial";
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 0,0,0;
+    -fx-background-insets: 0,1,2;
+    -fx-text-fill: #515151;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+    -fx-padding: 20;
+}
+
+.whitebutton:pressed{
+    -fx-background-color: #B2B2B2;
+}
+
+.whitebutton:hover{
+    -fx-background-color: #D9D9D9;
+}
+
+.whitebutton:disabled{
+    -fx-background-color: #D9D9D9;
+    -fx-text-fill: #AFAFAF;
+}
+
+.redbutton{
+    -fx-font-size: 24pt;
+    -fx-font-family: "Arial";
+    -fx-background-color: #F1353F;
+    -fx-background-radius: 0,0,0;
+    -fx-background-insets: 0,1,2;
+    -fx-text-fill: #FFFFFF;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+    -fx-padding: 20;
+}
+
+.redbutton:pressed{
+    -fx-background-color: #A82521;
+    -fx-text-fill: #FFFFFF;
+}
+
+.redbutton:hover{
+    -fx-background-color: #CB2D28;
+    -fx-text-fill: #FFFFFF;
+}
+
+.topbutton{
+    -fx-font-size: 24pt;
+    -fx-font-family: "Arial";
+    -fx-background-color: #F1353F;
+    -fx-background-radius: 0,0,0;
+    -fx-background-insets: 0,1,2;
+    -fx-text-fill: #FFFFFF;
+    -fx-padding: 5;
+}
+
+.topbutton:pressed{
+    -fx-background-color: #A82521;
+    -fx-text-fill: #FFFFFF;
+}
+
+.topbutton:hover{
+    -fx-background-color: #CB2D28;
+    -fx-text-fill: #FFFFFF;
+}
+
+.dark-pane{
+    -fx-background-color: #767676;
+}
+
+.border-pane{
+     -fx-background-color: #333333;
+ }
+
+.rating > .container > .button {
+    -fx-background-image: url("star_grey.png");
+    -fx-background-color: null;
+    /* Setting padding means setting size of star */
+    -fx-padding: 36 40;
+    -fx-background-image-repeat: no-repeat;
+    -fx-effect: null;
+}
+
+.rating > .container > .button.strong {
+    -fx-background-image: url("star_yellow.png");
+}
+
+.rating > .container > .button:disabled {
+    -fx-opacity: 1;
+}
+
+.progress-indicator {
+    -fx-progress-color: #AFAFAF;
+    -fx-text-fill: #AFAFAF;
+}
+
+.fps-txt {
+    -fx-font-size: 14pt;
+    -fx-font-family: "System";
+    -fx-text-fill: #AFAFAF;
+}
+
+.instruct-txt {
+    -fx-font-size: 48pt;
+    -fx-font-family: "System";
+    -fx-text-fill: #FFFFFF;
+    -fx-text-alignment: center;
+}
+
+.connect-txt {
+    -fx-font-size: 48pt;
+    -fx-font-family: "System";
+    -fx-text-fill: #333333;
+    -fx-text-alignment: center;
+}
