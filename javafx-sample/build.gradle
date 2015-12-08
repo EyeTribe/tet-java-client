@@ -5,6 +5,7 @@ dependencies {
     compile 'com.google.guava:guava:18.+'
     compile 'org.controlsfx:controlsfx:8.40.10'
     compile 'com.google.code.findbugs:jsr305:2.+'
+    compile 'com.theeyetribe:eyetribe-java:0.9.+'
 }
 
 jar {
@@ -17,18 +18,17 @@ jar {
     exclude('javafx/**', 'netscape/**', 'com/sun/**')
 }
 
-javafx
-{
+javafx {
     // Points to JDK and its JavaFX libraries, also declares target runtime JDK
     javaRuntime = System.getenv("JAVA8_HOME")
-    
+
     // Application name and ID presented by target OS
     appID 'EyeTribeJavaFx'
     appName 'EyeTribe JavaFx'
-    
+
     // Main class of application
     mainClass 'com.theeyetribe.javafx.Main'
-    
+
     // JVM arguments, system properties, application command line arguments
     jvmArgs = ['-XX:+AggressiveOpts', '-XX:CompileThreshold=1']
     systemProperties = ['prism.disableRegionCaching':'true']

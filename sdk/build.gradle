@@ -1,25 +1,20 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'me.tatarka:gradle-retrolambda:3.2.3'
-    }
-}
-
-apply plugin: 'me.tatarka.retrolambda'
-
-retrolambda {
-    jdk System.getenv("JAVA8_HOME")
-    oldJdk System.getenv("JAVA6_HOME")
-    javaVersion JavaVersion.VERSION_1_6
-}
-
 apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'com.jfrog.bintray'
+
+def props = new Properties()
+props.load(new FileInputStream("${rootDir}/eyetribe.properties"))
+props.each { key, val ->
+    project.set(key, val)
+}
 
 group = 'com.theeyetribe'
-version = '0.9.60'
+version = project.hasProperty('currentVersion') ? project.currentVersion : '0.0.1'
+
+def versionCurrent = version
+def versionName = "v.${version}"
+def id = 'eyetribe-java'
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
@@ -27,18 +22,93 @@ dependencies {
     compile 'org.jetbrains:annotations:+'
 }
 
-jar {
-    archivesBaseName = 'eyetribe-java'
+retrolambda {
+    jdk System.getenv("JAVA8_HOME")
+    oldJdk System.getenv("JAVA6_HOME")
+    javaVersion JavaVersion.VERSION_1_6
+}
 
-    //we include dependencies in jar
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+jar {
+    archivesBaseName = id
 }
 jar.outputs.upToDateWhen {false}
 
-task deployJar() << {
-    copy {
-        from jar.archivePath
-        into file('../javafx-sample/libs').absolutePath
+task javadocJar (type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+task sourceJar (type : Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId group
+            artifactId id
+            version versionCurrent
+
+            from components.java
+
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name id
+                    description 'Java SDK  for the EyeTribe Dev Kit.'
+                    url 'http://www.eyetribe.com'
+                    scm {
+                        url 'scm:https://github.com/EyeTribe/tet-java-client'
+                        connection 'scm:git@github.com:EyeTribe/tet-java-client.git'
+                        developerConnection 'scm:git@github.com:EyeTribe/tet-java-client.git'
+                    }
+                    licenses {
+                        license {
+                            name 'BSD'
+                            url 'https://opensource.org/licenses/BSD-2-Clause'
+                            distribution 'maven'
+                        }
+                    }
+                    issueManagement {
+                        system 'github'
+                        url 'https://github.com/EyeTribe/tet-java-client/issues'
+                    }
+                }
+            }
+
+            artifact (javadocJar) {
+                classifier = 'javadoc'
+            }
+
+            artifact (sourceJar) {
+                classifier = 'sources'
+            }
+        }
     }
 }
-jar.finalizedBy(deployJar)
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.bintrayUser : 'no-user'
+    key = project.hasProperty('bintrayKey') ? project.bintrayKey : 'no-key'
+    publications = ['mavenJava']
+
+    dryRun = true
+    publish = false
+
+    pkg {
+        repo = 'maven'
+        name = id
+        userOrg = project.hasProperty('bintrayUserOrg') ? project.bintrayUserOrg : 'no-org'
+        desc = 'https://github.com/EyeTribe/tet-java-client/blob/master/CHANGELOG.md'
+        websiteUrl = 'https://github.com/EyeTribe/tet-java-client'
+        vcsUrl = 'https://github.com/EyeTribe/tet-java-client.git'
+        licenses = ["BSD"]
+        labels = ['library','java','eyetribe','eyetracking']
+        version {
+            name = versionName
+            released = Date.parse( 'yyyy-MM-dd', project.hasProperty('releaseDate') ? project.releaseDate : '1970-01-01' )
+            vcsTag = versionName
+        }
+    }
+}
