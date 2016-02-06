@@ -18,8 +18,8 @@ def id = 'eyetribe-java'
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
-    compile 'com.google.code.gson:gson:2.3.1'
-    compile 'org.jetbrains:annotations:+'
+    compile 'com.google.code.gson:gson:2.5'
+    compile 'org.jetbrains:annotations:13.0' //Use legacy version to ensure Java 6 support
 }
 
 retrolambda {

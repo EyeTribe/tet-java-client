@@ -2,10 +2,10 @@ apply from: 'javafx.plugin'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.google.guava:guava:18.+'
+    compile 'com.google.guava:guava:19.0'
     compile 'org.controlsfx:controlsfx:8.40.10'
-    compile 'com.google.code.findbugs:jsr305:2.+'
-    compile 'com.theeyetribe:eyetribe-java:0.9.+'
+    compile 'com.google.code.findbugs:jsr305:3.0.1'
+    compile 'com.theeyetribe:eyetribe-java:0.9.60'
 }
 
 jar {
@@ -16,6 +16,9 @@ jar {
 
     //but exclude javafx classes
     exclude('javafx/**', 'netscape/**', 'com/sun/**')
+
+    //exclude dupes from 'javafx-sample' module
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 javafx {
