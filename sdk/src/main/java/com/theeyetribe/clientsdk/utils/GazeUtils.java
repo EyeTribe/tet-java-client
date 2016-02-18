@@ -9,6 +9,7 @@
 package com.theeyetribe.clientsdk.utils;
 
 import com.theeyetribe.clientsdk.data.GazeData;
+import com.theeyetribe.clientsdk.data.GazeData.Eye;
 import com.theeyetribe.clientsdk.data.Point2D;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,6 +18,11 @@ import org.jetbrains.annotations.Nullable;
  */
 public class GazeUtils
 {
+    protected GazeUtils()
+    {
+        //ensure non-instantiability
+    }
+
     /**
      * Find average pupil center of two eyes.
      * 
@@ -24,7 +30,7 @@ public class GazeUtils
      * @param rightEye right eye
      * @return the average center point in normalized values
      */
-    public static @Nullable Point2D getEyesCenterNormalized(GazeData.Eye leftEye, GazeData.Eye rightEye)
+    public static @Nullable Point2D getEyesCenterNormalized(Eye leftEye, Eye rightEye)
     {
         Point2D eyeCenter = null;
 
@@ -70,7 +76,7 @@ public class GazeUtils
      * @return the average center point in pixels
      */
     @Nullable
-    public static Point2D getEyesCenterPixels(GazeData.Eye leftEye, GazeData.Eye rightEye, int dimWidth, int dimHeight)
+    public static Point2D getEyesCenterPixels(Eye leftEye, Eye rightEye, int dimWidth, int dimHeight)
     {
         Point2D center = getEyesCenterNormalized(leftEye, rightEye);
 
@@ -104,7 +110,7 @@ public class GazeUtils
      * @param rightEye right eye
      * @return a normalized value [0..1] if eye present, -1 if not
      */
-    public static double getEyesDistanceNormalized(GazeData.Eye leftEye, GazeData.Eye rightEye)
+    public static double getEyesDistanceNormalized(Eye leftEye, Eye rightEye)
     {
         if (null != leftEye && null != rightEye)
         {

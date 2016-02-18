@@ -11,6 +11,7 @@ package com.theeyetribe.clientsdk;
 import com.theeyetribe.clientsdk.GazeApiManager.IGazeApiConnectionListener;
 import com.theeyetribe.clientsdk.GazeApiManager.IGazeApiResponseListener;
 import com.theeyetribe.clientsdk.data.CalibrationResult;
+import com.theeyetribe.clientsdk.data.CalibrationResult.CalibrationPoint;
 import com.theeyetribe.clientsdk.data.GazeData;
 import com.theeyetribe.clientsdk.request.Request;
 import com.theeyetribe.clientsdk.response.CalibrationPointEndResponse;
@@ -1412,8 +1413,8 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
 
                             // Evaluate resample points, we decrement according to number of points needing resampling
                             for (CalibrationResult.CalibrationPoint calibPoint : cper.values.calibrationResult.calibpoints) {
-                                if (calibPoint.state == CalibrationResult.CalibrationPoint.STATE_RESAMPLE
-                                        || calibPoint.state == CalibrationResult.CalibrationPoint.STATE_NO_DATA) {
+                                if (calibPoint.state == CalibrationPoint.STATE_RESAMPLE
+                                        || calibPoint.state == CalibrationPoint.STATE_NO_DATA) {
                                     --sampledCalibrationPoints;
                                 }
                             }
@@ -1511,31 +1512,31 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
         });
     }
 
-    public void broadcastToListeners(final List<IGazeListener> listeners, GazeData gazeData)
+    private void broadcastToListeners(final List<IGazeListener> listeners, GazeData gazeData)
     {
         broadcastToListeners(IGazeListener.class, listeners, gazeData);
     }
 
-    public void broadcastToListeners(final List<IConnectionStateListener> listeners, boolean isConnected)
+    private void broadcastToListeners(final List<IConnectionStateListener> listeners, boolean isConnected)
     {
         broadcastToListeners(IConnectionStateListener.class, listeners, isConnected);
     }
 
-    public void broadcastToListeners(final List<ITrackerStateListener> listeners, int trackerState)
+    private void broadcastToListeners(final List<ITrackerStateListener> listeners, int trackerState)
     {
         broadcastToListeners(ITrackerStateListener.class, listeners, trackerState);
     }
 
-    public void broadcastToListeners(final List<ICalibrationResultListener> listeners, boolean isCalibrated, CalibrationResult calibResult)
+    private void broadcastToListeners(final List<ICalibrationResultListener> listeners, boolean isCalibrated, CalibrationResult calibResult)
     {
         broadcastToListeners(ICalibrationResultListener.class, listeners, isCalibrated, calibResult);
     }
 
-    public void broadcastToListeners(final List<IScreenStateListener> listeners, int screenIndex, int screenResolutionWidth, int screenResolutionHeight,
+    private void broadcastToListeners(final List<IScreenStateListener> listeners, int screenIndex, int screenResolutionWidth, int screenResolutionHeight,
                                      float screenPhysicalWidth, float screenPhysicalHeight)
     {
         broadcastToListeners(IScreenStateListener.class, listeners, screenIndex, screenResolutionWidth, screenResolutionHeight,
-            screenPhysicalWidth, screenPhysicalHeight);
+                screenPhysicalWidth, screenPhysicalHeight);
     }
 
     private void broadcastToListeners(final Class<?> listType, final List<?> listeners, final Object... objs)
@@ -1553,7 +1554,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
                         else if (listType.isAssignableFrom(IConnectionStateListener.class))
                             ((IConnectionStateListener) l).onConnectionStateChanged((boolean) objs[0]);
                         else if (listType.isAssignableFrom(ICalibrationResultListener.class))
-                                ((ICalibrationResultListener) l).onCalibrationChanged((boolean) objs[0], (CalibrationResult) objs[1]);
+                            ((ICalibrationResultListener) l).onCalibrationChanged((boolean) objs[0], (CalibrationResult) objs[1]);
                         else if (listType.isAssignableFrom(ITrackerStateListener.class))
                             ((ITrackerStateListener) l).onTrackerStateChanged((int) objs[0]);
                         else if (listType.isAssignableFrom(IScreenStateListener.class))

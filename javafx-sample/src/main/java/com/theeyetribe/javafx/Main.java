@@ -1,8 +1,11 @@
 package com.theeyetribe.javafx;
 
 import com.theeyetribe.clientsdk.GazeManager;
+import com.theeyetribe.clientsdk.IGazeListener;
+import com.theeyetribe.clientsdk.data.GazeData;
 import com.theeyetribe.clientsdk.data.Point2D;
 import com.theeyetribe.javafx.scenes.SceneController;
+import com.theeyetribe.javafx.utils.GazeFrameCache;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -20,7 +23,7 @@ import java.util.ResourceBundle;
 /**
  * Main application class of program
  */
-public class Main extends Application
+public class Main extends Application implements IGazeListener
 {
     private SceneController mCurrentController;
 
@@ -62,6 +65,7 @@ public class Main extends Application
             }
         }
 
+        GazeManager.getInstance().addGazeListener(this);
         GazeManager.getInstance().activateAsync();
     }
 
@@ -71,6 +75,7 @@ public class Main extends Application
         if(null != mCurrentController)
             mCurrentController.onStop();
 
+        // deactivating, listener removed at part of this call
         GazeManager.getInstance().deactivate();
     }
 
@@ -142,5 +147,12 @@ public class Main extends Application
         mCurrentController.onStart();
 
         return scene;
+    }
+
+    @Override
+    public void onGazeUpdate(GazeData gazeData)
+    {
+        // Update gaze cache as long as program runs
+        GazeFrameCache.getInstance().update(gazeData);
     }
 }

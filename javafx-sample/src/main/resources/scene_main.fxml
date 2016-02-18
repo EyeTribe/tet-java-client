@@ -5,7 +5,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-<?import org.controlsfx.control.Rating?>
+<?import org.controlsfx.control.*?>
 
 <BorderPane id="pane" fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/8"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.theeyetribe.javafx.scenes.SceneMainController">
@@ -15,12 +15,12 @@
             <children>
                 <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
                     <children>
-                        <ImageView fx:id="eyeLeft" fitHeight="150.0" fitWidth="200.0" pickOnBounds="false" preserveRatio="true" visible="false">
+                        <ImageView fx:id="eyeLeft" fitHeight="150.0" fitWidth="150.0" pickOnBounds="false" preserveRatio="true" visible="false">
                             <image>
                                 <Image url="@eye.png"/>
                             </image>
                         </ImageView>
-                        <ImageView fx:id="eyeRight" fitHeight="150.0" fitWidth="200.0" pickOnBounds="false" preserveRatio="true" visible="false">
+                        <ImageView fx:id="eyeRight" fitHeight="150.0" fitWidth="150.0" pickOnBounds="false" preserveRatio="true" visible="false">
                             <image>
                                 <Image url="@eye.png"/>
                             </image>
