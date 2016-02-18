@@ -13,7 +13,6 @@ import com.theeyetribe.clientsdk.ICalibrationProcessHandler;
 import com.theeyetribe.clientsdk.data.CalibrationResult;
 import com.theeyetribe.clientsdk.data.GazeData;
 import com.theeyetribe.clientsdk.data.Point2D;
-import com.theeyetribe.javafx.utils.GazeFrameCache;
 import com.theeyetribe.javafx.utils.JavaFxCalibUtils;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -92,7 +91,6 @@ public class SceneCalibrationController extends SceneController implements ICali
     public void onGazeUpdate(GazeData gazeData)
     {
         Platform.runLater(() -> {
-            GazeFrameCache.getInstance().update(gazeData);
 
             if (!mIsRecievingFrames)
             {

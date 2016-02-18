@@ -52,7 +52,6 @@ public class SceneEvaluationController extends SceneController
     public void onGazeUpdate(GazeData gazeData)
     {
         Platform.runLater(() -> {
-            GazeFrameCache.getInstance().update(gazeData);
 
             if (!mIsRecievingFrames)
             {

@@ -124,7 +124,10 @@ public abstract class SceneController implements IGazeListener, ITrackerStateLis
     public javafx.geometry.Point2D getGazeIndicatorAnchor(final Point2D gazeCoords)
     {
         if(null != gazeCoords)
-            return innerRoot.screenToLocal(gazeCoords.x, gazeCoords.y);
+            return innerRoot.screenToLocal(
+                    gazeCoords.x - (gazeIndicator.getFitWidth() * .5d),
+                    gazeCoords.y - (gazeIndicator.getFitHeight() * .5d)
+            );
 
         return null;
     }

@@ -22,6 +22,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Pane;
 import org.controlsfx.control.Rating;
 
 /**
@@ -86,7 +87,6 @@ public class SceneMainController extends SceneController
     public void onGazeUpdate(GazeData gazeData)
     {
         Platform.runLater(() -> {
-            GazeFrameCache.getInstance().update(gazeData);
 
             if (!mIsRecievingFrames)
             {
@@ -101,35 +101,32 @@ public class SceneMainController extends SceneController
             double scale = null != GazeFrameCache.getInstance().getLastUserPosition() ? GazeFrameCache.getInstance().getLastUserPosition().z : 1d;
             scale *= 1.5d;
 
-            if (null != GazeFrameCache.getInstance().getLastLeftEye()) {
-                Point2D left = GazeUtils.getRelativeToRect(
-                        GazeFrameCache.getInstance().getLastLeftEye().pupilCenterCoordinates,
-                        (int) Math.round(root.getScene().getWidth()),
-                        (int) Math.round(root.getScene().getHeight())
+            if (null != GazeFrameCache.getInstance().getLastLeftEye())
+            {
+                updateEye(
+                        root,
+                        eyeLeft,
+                        GazeFrameCache.getInstance().getLastLeftEye(),
+                        angle,
+                        scale
                 );
 
                 eyeLeft.setVisible(true);
-                eyeLeft.setX(left.x);
-                eyeLeft.setY(left.y);
-                eyeLeft.setRotate(angle);
-                eyeLeft.setScaleX(scale);
-                eyeLeft.setScaleY(scale);
             } else
                 eyeLeft.setVisible(false);
 
-            if (null != GazeFrameCache.getInstance().getLastRightEye()) {
-                Point2D right = GazeUtils.getRelativeToRect(
-                        GazeFrameCache.getInstance().getLastRightEye().pupilCenterCoordinates,
-                        (int) Math.round(root.getScene().getWidth()),
-                        (int) Math.round(root.getScene().getHeight())
+            if (null != GazeFrameCache.getInstance().getLastRightEye())
+            {
+                updateEye(
+                        root,
+                        eyeRight,
+                        GazeFrameCache.getInstance().getLastRightEye(),
+                        angle,
+                        scale
                 );
 
                 eyeRight.setVisible(true);
-                eyeRight.setX(right.x);
-                eyeRight.setY(right.y);
-                eyeRight.setRotate(angle);
-                eyeRight.setScaleX(scale);
-                eyeRight.setScaleY(scale);
+
             } else
                 eyeRight.setVisible(false);
 
@@ -150,6 +147,24 @@ public class SceneMainController extends SceneController
                 fpsLabel.setText(bundle.getString("label.fps") + " " + String.format("%.2f", mFpsCache.getAvgFramesPerSecond()));
             }
         });
+    }
+
+    private void updateEye(Pane root, ImageView eyeImageView, GazeData.Eye eye, double angle, double scale)
+    {
+        Point2D p = GazeUtils.getRelativeToRect(
+                eye.pupilCenterCoordinates,
+                (int) Math.round(root.getScene().getWidth()),
+                (int) Math.round(root.getScene().getHeight())
+        );
+
+        p.x -= eyeImageView.getFitWidth() * .5d;
+        p.y -= eyeImageView.getFitHeight() * .5d;
+
+        eyeImageView.setX(p.x);
+        eyeImageView.setY(p.y);
+        eyeImageView.setRotate(angle);
+        eyeImageView.setScaleX(scale);
+        eyeImageView.setScaleY(scale);
     }
 
     @Override
