@@ -22,6 +22,11 @@ import java.util.ResourceBundle;
  */
 public class JavaFxCalibUtils extends CalibUtils
 {
+    private JavaFxCalibUtils()
+    {
+        //ensure non-instantiability
+    }
+
     public static String getCalibString(@Nonnull ResourceBundle bundle, CalibQuality result)
     {
         if(null == bundle)
