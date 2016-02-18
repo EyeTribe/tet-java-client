@@ -35,6 +35,11 @@ public class CalibUtils
         }
     }
 
+    protected CalibUtils()
+    {
+        //ensure non-instantiability
+    }
+
     /**
      * Return CalibQuality based on CalibrationResult object.
      *

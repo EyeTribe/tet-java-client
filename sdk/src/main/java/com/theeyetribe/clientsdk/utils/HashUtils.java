@@ -5,6 +5,11 @@ package com.theeyetribe.clientsdk.utils;
  */
 public class HashUtils
 {
+    private HashUtils()
+    {
+        //ensure non-instantiability
+    }
+
     public static int hash(Boolean value)
     {
         return value ? 1231 : 1237;

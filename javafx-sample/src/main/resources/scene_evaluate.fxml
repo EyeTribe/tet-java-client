@@ -6,7 +6,7 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<?import org.controlsfx.control.Rating?>
+<?import org.controlsfx.control.*?>
 
 <BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" styleClass="dark-pane" stylesheets="@styles.css"
             xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.theeyetribe.javafx.scenes.SceneEvaluationController">

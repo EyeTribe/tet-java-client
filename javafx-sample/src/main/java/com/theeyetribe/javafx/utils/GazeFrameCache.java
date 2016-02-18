@@ -31,8 +31,6 @@ import java.util.Iterator;
  */
 public class GazeFrameCache
 {
-    private final static String TAG = GazeFrameCache.class.getSimpleName();
-
     public final static int DEFAULT_CACHE_TIME_FRAME_MILLIS = 500;
     private final static int NO_TRACKING_MASK = GazeData.STATE_TRACKING_FAIL | GazeData.STATE_TRACKING_LOST;
 

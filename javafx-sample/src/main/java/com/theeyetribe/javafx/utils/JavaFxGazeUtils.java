@@ -24,7 +24,10 @@ import java.util.List;
  */
 public class JavaFxGazeUtils extends GazeUtils
 {
-    public static final String TAG = JavaFxGazeUtils.class.getSimpleName();
+    private JavaFxGazeUtils()
+    {
+        //ensure non-instantiability
+    }
     
     public static boolean checkGazeCollision(Node n, Point2D gaze)
     {
