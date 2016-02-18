@@ -28,7 +28,8 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Networking class that manages communication with the underlying EyeTribe Server using the Tracker API over TCP Sockets.
+ * Networking class that manages communication with the underlying EyeTribe Server using the Tracker API over TCP
+ * Sockets.
  *
  * @see <a href="http://dev.theeyetribe.com/api/#api">EyeTribe API</a>
  */
@@ -454,7 +455,7 @@ class GazeApiManager
                                     }
                                     else if (null != (response = parseIncomingProcessResponse(jo)))
                                     {
-                                        // We allow the network layer extensions to optinally handle the process reponse
+                                        // We allow the network layer extensions to optionally handle the process response
                                     }
                                     else
                                     {
