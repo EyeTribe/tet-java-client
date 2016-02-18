@@ -30,6 +30,11 @@ retrolambda {
 
 jar {
     archivesBaseName = id
+
+    /* Include this if building non-Maven jar
+    // We include dependencies in output jar
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    */
 }
 jar.outputs.upToDateWhen {false}
 
