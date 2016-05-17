@@ -20,6 +20,8 @@ import java.util.List;
  */
 public class CalibUtils
 {
+    private static final float EPSILON = 1e-005f;
+
     public static enum CalibQuality
     {
         NONE (0),
@@ -48,27 +50,26 @@ public class CalibUtils
      */
     public static CalibQuality getCalibQuality(CalibrationResult result)
     {
-        if (result == null)
+        if (result != null && result.averageErrorDegree > EPSILON)
         {
-            return CalibQuality.NONE;
+            if (result.averageErrorDegree < 0.5)
+            {
+                return CalibQuality.PERFECT;
+            }
+            else if (result.averageErrorDegree < 0.7)
+            {
+                return CalibQuality.GOOD;
+            }
+            else if (result.averageErrorDegree < 1)
+            {
+                return CalibQuality.MODERATE;
+            }
+            else if (result.averageErrorDegree < 1.5)
+            {
+                return CalibQuality.POOR;
+            }
         }
 
-        if (result.averageErrorDegree < 0.5)
-        {
-            return CalibQuality.PERFECT;
-        }
-        else if (result.averageErrorDegree < 0.7)
-        {
-            return CalibQuality.GOOD;
-        }
-        else if (result.averageErrorDegree < 1)
-        {
-            return CalibQuality.MODERATE;
-        }
-        else if (result.averageErrorDegree < 1.5)
-        {
-            return CalibQuality.POOR;
-        }
         return CalibQuality.NONE;
     }
 
@@ -244,8 +245,8 @@ public class CalibUtils
         List<Point2D> anchors = new ArrayList<Point2D>();
 
         double x = 0,y = 0;
-        double horsSlice = (width - paddingHors - paddingHors) / (columns - 1);
-        double vertSlice = (height - paddingVert - paddingVert) / (rows - 1);
+        double horsSlice = (double)(width - paddingHors - paddingHors) / (columns - 1);
+        double vertSlice = (double)(height - paddingVert - paddingVert) / (rows - 1);
         for(int i = 0; i < columns; i++)
         {
             x = horsSlice * i;
@@ -254,7 +255,7 @@ public class CalibUtils
             {
                 y = vertSlice * j;
 
-                Point2D p = new Point2D(paddingHors + x, paddingVert + y);
+                Point2D p = new Point2D((float)(paddingHors + x), (float)(paddingVert + y));
 
                 anchors.add(p);
             }

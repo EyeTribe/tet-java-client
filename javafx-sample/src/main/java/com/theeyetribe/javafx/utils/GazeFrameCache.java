@@ -34,8 +34,8 @@ public class GazeFrameCache
     public final static int DEFAULT_CACHE_TIME_FRAME_MILLIS = 500;
     private final static int NO_TRACKING_MASK = GazeData.STATE_TRACKING_FAIL | GazeData.STATE_TRACKING_LOST;
 
-    private double mMinEyesDistance = 0.1f;
-    private double mMaxEyesDistance = 0.3f;
+    private float mMinEyesDistance = 0.1f;
+    private float mMaxEyesDistance = 0.4f;
 
     protected GazeDataDeque mFrames;
 
@@ -58,8 +58,8 @@ public class GazeFrameCache
     protected boolean mShouldUpdate;
 
     //internals
-    private Point2D mLastEyesVecHalf = new Point2D(.2,0d);
-    private double mLastEyeDistance = mMaxEyesDistance - mMinEyesDistance / mMaxEyesDistance;
+    private Point2D mLastEyesVecHalf = new Point2D(.2f,0f);
+    private float mLastEyeDistance = (mMaxEyesDistance - mMinEyesDistance) / mMaxEyesDistance;
 
     public static GazeFrameCache getInstance()
     {
@@ -75,6 +75,11 @@ public class GazeFrameCache
     {
         mFrames = new GazeDataDeque(timeLimit);
         mValidFramePredicate = new ValidFrame();
+
+        //init user distance values
+        mLastEyesVecHalf = new Point2D(.2f, 0f);
+        mLastEyeDistance = 1f - ((mMinEyesDistance + ((mMaxEyesDistance - mMinEyesDistance) * .5f)) / mMaxEyesDistance);
+        mLastUserPosition = new Point3D(GazeManager.getInstance().getScreenResolutionWidth() >> 1, GazeManager.getInstance().getScreenResolutionHeight() >> 1, mLastEyeDistance);
     }
 
     public void setTimeLimit(int timeLimit)
@@ -88,7 +93,7 @@ public class GazeFrameCache
         if(mFrames.contains(frame))
             return;
 
-        //set delta based on contineous stream and not valid frames only
+        //set delta based on continuous stream and not valid frames only
         long now = System.currentTimeMillis();
         mFrameDelta = now - mFrameTimeStamp;
         mFrameTimeStamp = now;
@@ -102,7 +107,7 @@ public class GazeFrameCache
         Point2D gazeCoords = null;
         Point2D gazeCoordsSmooth = null;
         Point2D userPos = null;
-        double userDist = 0d;
+        double userDist = 0f;
         Point2D eyeDistVecHalf = null;
         GazeData gd;
         Iterable<GazeData> valid = Iterables.filter(mFrames, mValidFramePredicate);
@@ -158,12 +163,12 @@ public class GazeFrameCache
 
             //update 'depth' measure
             if (userDist < mMinEyesDistance)
-                mMinEyesDistance = userDist;
+                mMinEyesDistance = (float)userDist;
 
             if (userDist > mMaxEyesDistance)
-                mMaxEyesDistance = userDist;
+                mMaxEyesDistance = (float)userDist;
 
-            mLastEyeDistance = userDist / mMaxEyesDistance;
+            mLastEyeDistance = 1f - ((float)userDist / mMaxEyesDistance);
 
             //update user position
             mLastUserPosition = new Point3D(userPos.x, userPos.y, mLastEyeDistance);

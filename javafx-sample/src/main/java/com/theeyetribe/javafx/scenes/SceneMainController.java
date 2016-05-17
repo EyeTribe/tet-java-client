@@ -98,8 +98,7 @@ public class SceneMainController extends SceneController
             }
 
             double angle = GazeFrameCache.getInstance().getLastEyesAngle();
-            double scale = null != GazeFrameCache.getInstance().getLastUserPosition() ? GazeFrameCache.getInstance().getLastUserPosition().z : 1d;
-            scale *= 1.5d;
+            double scale = 1 - GazeFrameCache.getInstance().getLastUserPosition().z;
 
             if (null != GazeFrameCache.getInstance().getLastLeftEye())
             {

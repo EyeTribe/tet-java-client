@@ -5,20 +5,17 @@ dependencies {
     compile 'com.google.guava:guava:19.0'
     compile 'org.controlsfx:controlsfx:8.40.10'
     compile 'com.google.code.findbugs:jsr305:3.0.1'
-    compile 'com.theeyetribe:eyetribe-java:0.9.60'
+    compile 'com.theeyetribe:eyetribe-java:0.9.77'
 }
 
 jar {
     archivesBaseName = 'EyeTribeJavaFx'
 
-    //we include everything from 'libs' folder
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-
     //but exclude javafx classes
     exclude('javafx/**', 'netscape/**', 'com/sun/**')
 
-    //exclude dupes from 'javafx-sample' module
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    //we include everything from 'libs' folder
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
 javafx {

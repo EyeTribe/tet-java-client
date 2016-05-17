@@ -19,9 +19,8 @@ import com.theeyetribe.clientsdk.response.Response;
  */
 public class TrackerSetRequest extends Request<Response>
 {
-    public class Values
+    public static class Values
     {
-        public Boolean push;
         public Integer version;
         @SerializedName(Protocol.TRACKER_SCREEN_INDEX)
         public Integer screenIndex;

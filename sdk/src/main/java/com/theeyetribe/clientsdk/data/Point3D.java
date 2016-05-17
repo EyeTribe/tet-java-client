@@ -11,29 +11,33 @@ package com.theeyetribe.clientsdk.data;
 import com.theeyetribe.clientsdk.utils.HashUtils;
 
 /**
- * 3D point with double precision used for gaze control routines
+ * 3D point with float precision used for gaze control routines
  */
-public class Point3D extends Point2D
+public class Point3D
 {
-    public double z;
+    public float x;
+    public float y;
+    public float z;
+
+    public static final float EPSILON = 1e-005f;
 
     public static final Point3D ZERO = new Point3D();
 
     public Point3D()
     {
-        super();
-        z = 0;
     }
 
-    public Point3D(double x, double y, double z)
+    public Point3D(float x, float y, float z)
     {
-        super(x, y);
+        this.x = x;
+        this.y = y;
         this.z = z;
     }
 
     public Point3D(Point3D other)
     {
-        super(other.x, other.y);
+        this.x = other.x;
+        this.y = other.y;
         this.z = other.z;
     }
 
@@ -48,13 +52,18 @@ public class Point3D extends Point2D
 
         Point3D other = (Point3D) o;
 
-        return super.equals(other) && Double.doubleToLongBits(z) == Double.doubleToLongBits(other.z);
+        return
+            Float.compare(this.x, other.x) == 0 &&
+            Float.compare(this.y, other.y) == 0 &&
+            Float.compare(this.z, other.z) == 0;
     }
 
     @Override
     public int hashCode()
     {
-        int hash = super.hashCode();
+        int hash = 571;
+        hash = hash * 2777 + HashUtils.hash(x);
+        hash = hash * 2777 + HashUtils.hash(y);
         hash = hash * 2777 + HashUtils.hash(z);
         return hash;
     }
@@ -74,17 +83,17 @@ public class Point3D extends Point2D
         return new Point3D(this.x * p2.x, this.y * p2.y, this.z * p2.z);
     }
 
-    public Point3D multiply(double k)
+    public Point3D multiply(float k)
     {
         return new Point3D(this.x * k, this.y * k, this.z * k);
     }
 
-    public Point3D divide(double k)
+    public Point3D divide(float k)
     {
         return new Point3D(this.x / k, this.y / k, this.z / k);
     }
 
-    public double average()
+    public float average()
     {
         return (x + y + z) / 3;
     }

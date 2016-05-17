@@ -45,8 +45,6 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
     protected int totalCalibrationPoints;
     protected int sampledCalibrationPoints;
 
-    protected Heartbeat heartbeatHandler;
-
     protected GazeApiManager apiManager;
 
     private ThreadPoolExecutor threadPool;
@@ -64,7 +62,6 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
     protected ClientMode clientMode;
     protected Boolean isCalibrated = false;
     protected Boolean isCalibrating = false;
-    protected Integer heartbeatMillis = 3000; // default value
     protected Integer screenIndex = 0;
     protected Integer screenResolutionWidth = 0;
     protected Integer screenResolutionHeight = 0;
@@ -80,8 +77,6 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
         mTrackerStateListeners = Collections.synchronizedList(new ArrayList<>());
         mScreenStateListeners = Collections.synchronizedList(new ArrayList<>());
         mConnectionStateListeners = Collections.synchronizedList(new ArrayList<>());
-
-        heartbeatHandler = new Heartbeat();
     }
 
     /**
@@ -94,7 +89,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      */
     public boolean activate()
     {
-        return activate(ApiVersion.VERSION_1_0, ClientMode.PUSH, GazeApiManager.DEFAULT_SERVER_HOST,
+        return activate(ApiVersion.VERSION_1_0, GazeApiManager.DEFAULT_SERVER_HOST,
                 GazeApiManager.DEFAULT_SERVER_PORT);
     }
 
@@ -103,14 +98,16 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      * during initialization.
      * <p>
      * To shutdown, the {@link #deactivate() deactivate} method must be called.
-     * 
+     *
      * @param version Version number of the Tracker API that this client will be compliant to
      * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
      * @return true if successfully activated, false otherwise
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
      */
     public boolean activate(ApiVersion version, ClientMode mode)
     {
-        return activate(version, mode, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT);
+        //Connect using default 'Push' mode
+        return activate(version, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT);
     }
 
     /**
@@ -123,10 +120,12 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
      * @param listener Listener to notify once the connection to EyeTribe Server has been established
      * @return true if successfully activated, false otherwise
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
      */
     public boolean activate(ApiVersion version, ClientMode mode, IConnectionStateListener listener)
     {
-        return activate(version, mode, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT, listener);
+        //Connect using default 'Push' mode
+        return activate(version, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT, listener);
     }
 
     /**
@@ -141,12 +140,14 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      * @param portnumber The port number used for the eye tracking server
      * @param listener Listener to notify once the connection to EyeTribe Server has been established
      * @return true if successfully activated, false otherwise
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
      */
     public boolean activate(ApiVersion version, ClientMode mode, String hostname, int portnumber,
-            IConnectionStateListener listener)
+                            IConnectionStateListener listener)
     {
         addConnectionStateListener(listener);
-        return activate(version, mode, hostname, portnumber);
+        //Connect using default 'Push' mode
+        return activate(version, hostname, portnumber);
     }
 
     /**
@@ -160,10 +161,12 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      * @param hostname The host name or IP address where the eye tracking server is running
      * @param portnumber The port number used for the eye tracking server
      * @return true if successfully activated, false otherwise
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
      */
     public boolean activate(ApiVersion version, ClientMode mode, String hostname, int portnumber)
     {
-        return activate(version, mode, hostname, portnumber, DEFAULT_TIMEOUT_MILLIS);
+        //Connect using default 'Push' mode
+        return activate(version, hostname, portnumber, DEFAULT_TIMEOUT_MILLIS);
     }
 
     /**
@@ -171,20 +174,105 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      * during initialization.
      * <p>
      * To shutdown, the {@link #deactivate() deactivate} method must be called.
-     * 
+     *
      * @param version Version number of the Tracker API that this client will be compliant to
      * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
      * @param hostname The host name or IP address where the eye tracking server is running
      * @param portnumber The port number used for the eye tracking server
      * @param timeOut time out in milliseconds of connection attempt
      * @return true if successfully activated, false otherwise
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
      */
     public boolean activate(final ApiVersion version, final ClientMode mode, final String hostname,
+                            final int portnumber, final long timeOut)
+    {
+        //Connect using default 'Push' mode
+        return activate(version, hostname, portnumber, timeOut);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is synchronous and calling thread is locked
+     * during initialization.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     * 
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @return true if successfully activated, false otherwise
+     */
+    public boolean activate(ApiVersion version)
+    {
+        return activate(version, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is synchronous and calling thread is locked
+     * during initialization.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     * 
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param listener Listener to notify once the connection to EyeTribe Server has been established
+     * @return true if successfully activated, false otherwise
+     */
+    public boolean activate(ApiVersion version, IConnectionStateListener listener)
+    {
+        addConnectionStateListener(listener);
+        return activate(version, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is synchronous and calling thread is locked
+     * during initialization.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     * 
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param hostname The host name or IP address where the eye tracking server is running
+     * @param portnumber The port number used for the eye tracking server
+     * @param listener Listener to notify once the connection to EyeTribe Server has been established
+     * @return true if successfully activated, false otherwise
+     */
+    public boolean activate(ApiVersion version, String hostname, int portnumber,
+            IConnectionStateListener listener)
+    {
+        addConnectionStateListener(listener);
+        return activate(version, hostname, portnumber);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is synchronous and calling thread is locked
+     * during initialization.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     * 
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param hostname The host name or IP address where the eye tracking server is running
+     * @param portnumber The port number used for the eye tracking server
+     * @return true if successfully activated, false otherwise
+     */
+    public boolean activate(ApiVersion version, String hostname, int portnumber)
+    {
+        return activate(version, hostname, portnumber, DEFAULT_TIMEOUT_MILLIS);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is synchronous and calling thread is locked
+     * during initialization.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     * 
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param hostname The host name or IP address where the eye tracking server is running
+     * @param portnumber The port number used for the eye tracking server
+     * @param timeOut time out in milliseconds of connection attempt
+     * @return true if successfully activated, false otherwise
+     */
+    public boolean activate(final ApiVersion version, final String hostname,
             final int portnumber, final long timeOut)
     {
         try
         {
-            return activateAsync(version, mode, hostname, portnumber, timeOut).get(timeOut, TimeUnit.MILLISECONDS);
+            return activateAsync(version, hostname, portnumber, timeOut).get(timeOut, TimeUnit.MILLISECONDS);
         }
         catch (Exception e)
         {
@@ -204,8 +292,122 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      */
     public Future<Boolean> activateAsync()
     {
-        return activateAsync(ApiVersion.VERSION_1_0, ClientMode.PUSH, GazeApiManager.DEFAULT_SERVER_HOST,
+        return activateAsync(ApiVersion.VERSION_1_0, GazeApiManager.DEFAULT_SERVER_HOST,
                 GazeApiManager.DEFAULT_SERVER_PORT);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is asynchronous.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     *
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
+     * @return a Future representing the pending connection attempt
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
+     */
+    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode)
+    {
+        //Connect using default 'Push' mode
+        return activateAsync(version, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is asynchronous.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     *
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
+     * @param listener Listener to notify once the connection to EyeTribe Server has been established
+     * @return a Future representing the pending connection attempt
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
+     */
+    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode, IConnectionStateListener listener)
+    {
+        //Connect using default 'Push' mode
+        return activateAsync(version, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT, listener);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is asynchronous.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     *
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
+     * @param hostname The host name or IP address where the eye tracking server is running
+     * @param portnumber The port number used for the eye tracking server
+     * @param listener Listener to notify once the connection to EyeTribe Server has been established *
+     * @return a Future representing the pending connection attempt
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
+     */
+    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode, String hostname, int portnumber,
+                                         IConnectionStateListener listener)
+    {
+        addConnectionStateListener(listener);
+        //Connect using default 'Push' mode
+        return activateAsync(version, hostname, portnumber);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is asynchronous.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     *
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
+     * @param hostname The host name or IP address where the eye tracking server is running
+     * @param portnumber The port number used for the eye tracking server
+     * @return a Future representing the pending connection attempt
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
+     */
+    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode, String hostname, int portnumber)
+    {
+        //Connect using default 'Push' mode
+        return activateAsync(version, hostname, portnumber, DEFAULT_TIMEOUT_MILLIS, 1);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is asynchronous.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     *
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
+     * @param hostname The host name or IP address where the eye tracking server is running
+     * @param portnumber The port number used for the eye tracking server
+     * @param timeOut time out in milliseconds of connection attempt
+     * @return a Future representing the pending connection attempt
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
+     */
+    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode, String hostname, int portnumber, long timeOut)
+    {
+        //Connect using default 'Push' mode
+        return activateAsync(version, hostname, portnumber, timeOut, 1);
+    }
+
+    /**
+     * Activates EyeTribe Java SDK and all underlying routines. This call is asynchronous.
+     * <p>
+     * During the set timeout, an amount of connection retries will be attempted.
+     * <p>
+     * To shutdown, the {@link #deactivate() deactivate} method must be called.
+     *
+     * @param version Version number of the Tracker API that this client will be compliant to
+     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
+     * @param hostname The host name or IP address where the eye tracking server is running
+     * @param portnumber The port number used for the eye tracking server
+     * @param timeOut time out in milliseconds of connection attempt
+     * @param retries number of times to retry connection attempt in the timeout period
+     * @return a Future representing the pending connection attempt
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
+     */
+    public Future<Boolean> activateAsync(final ApiVersion version, final ClientMode mode, final String hostname,
+                                         final int portnumber, final long timeOut, final int retries)
+    {
+        //Connect using default 'Push' mode
+        return activateAsync(version, hostname, portnumber, timeOut, retries);
     }
     
     /**
@@ -222,7 +424,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      */
     public Future<Boolean> activateAsync(long timeOut, int retries)
     {
-        return activateAsync(ApiVersion.VERSION_1_0, ClientMode.PUSH, GazeApiManager.DEFAULT_SERVER_HOST,
+        return activateAsync(ApiVersion.VERSION_1_0, GazeApiManager.DEFAULT_SERVER_HOST,
                 GazeApiManager.DEFAULT_SERVER_PORT, timeOut, retries);
     }    
 
@@ -232,62 +434,59 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      * To shutdown, the {@link #deactivate() deactivate} method must be called.
      * 
      * @param version Version number of the Tracker API that this client will be compliant to
-     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
      * @return a Future representing the pending connection attempt
      */
-    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode)
+    public Future<Boolean> activateAsync(ApiVersion version)
     {
-        return activateAsync(version, mode, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT);
+        return activateAsync(version, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT);
     }
 
     /**
      * Activates EyeTribe Java SDK and all underlying routines. This call is asynchronous.
      * <p>
      * To shutdown, the {@link #deactivate() deactivate} method must be called.
-     *
+     * 
      * @param version Version number of the Tracker API that this client will be compliant to
-     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
-     * @param listener Listener to notify once the connection to EyeTribe Server has been established
+     * @param listener Listener to notify once the connection to EyeTribe Server has been established *
      * @return a Future representing the pending connection attempt
      */
-    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode, IConnectionStateListener listener)
+    public Future<Boolean> activateAsync(ApiVersion version, IConnectionStateListener listener)
     {
-        return activateAsync(version, mode, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT, listener);
+        addConnectionStateListener(listener);
+        return activateAsync(version, GazeApiManager.DEFAULT_SERVER_HOST, GazeApiManager.DEFAULT_SERVER_PORT);
     }
 
     /**
      * Activates EyeTribe Java SDK and all underlying routines. This call is asynchronous.
      * <p>
      * To shutdown, the {@link #deactivate() deactivate} method must be called.
-     *
+     * 
      * @param version Version number of the Tracker API that this client will be compliant to
-     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
      * @param hostname The host name or IP address where the eye tracking server is running
      * @param portnumber The port number used for the eye tracking server
      * @param listener Listener to notify once the connection to EyeTribe Server has been established *
      * @return a Future representing the pending connection attempt
      */
-    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode, String hostname, int portnumber,
+    public Future<Boolean> activateAsync(ApiVersion version, String hostname, int portnumber,
             IConnectionStateListener listener)
     {
         addConnectionStateListener(listener);
-        return activateAsync(version, mode, hostname, portnumber);
+        return activateAsync(version, hostname, portnumber);
     }
 
     /**
      * Activates EyeTribe Java SDK and all underlying routines. This call is asynchronous.
      * <p>
      * To shutdown, the {@link #deactivate() deactivate} method must be called.
-     *
+     * 
      * @param version Version number of the Tracker API that this client will be compliant to
-     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
      * @param hostname The host name or IP address where the eye tracking server is running
      * @param portnumber The port number used for the eye tracking server
      * @return a Future representing the pending connection attempt
      */
-    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode, String hostname, int portnumber)
+    public Future<Boolean> activateAsync(ApiVersion version, String hostname, int portnumber)
     {
-        return activateAsync(version, mode, hostname, portnumber, DEFAULT_TIMEOUT_MILLIS, 1);
+        return activateAsync(version, hostname, portnumber, DEFAULT_TIMEOUT_MILLIS, 1);
     }
 
     /**
@@ -296,15 +495,14 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      * To shutdown, the {@link #deactivate() deactivate} method must be called.
      *
      * @param version Version number of the Tracker API that this client will be compliant to
-     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
      * @param hostname The host name or IP address where the eye tracking server is running
      * @param portnumber The port number used for the eye tracking server
      * @param timeOut time out in milliseconds of connection attempt
      * @return a Future representing the pending connection attempt
      */
-    public Future<Boolean> activateAsync(ApiVersion version, ClientMode mode, String hostname, int portnumber, long timeOut)
+    public Future<Boolean> activateAsync(ApiVersion version, String hostname, int portnumber, long timeOut)
     {
-        return activateAsync(version, mode, hostname, portnumber, timeOut, 1);
+        return activateAsync(version, hostname, portnumber, timeOut, 1);
     }
 
     /**
@@ -315,14 +513,13 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      * To shutdown, the {@link #deactivate() deactivate} method must be called.
      * 
      * @param version Version number of the Tracker API that this client will be compliant to
-     * @param mode Mode though which the client will receive GazeData. Either ClientMode.PUSH or ClientMode.PULL
      * @param hostname The host name or IP address where the eye tracking server is running
      * @param portnumber The port number used for the eye tracking server
      * @param timeOut time out in milliseconds of connection attempt
      * @param retries number of times to retry connection attempt in the timeout period
      * @return a Future representing the pending connection attempt
      */
-    public Future<Boolean> activateAsync(final ApiVersion version, final ClientMode mode, final String hostname,
+    public Future<Boolean> activateAsync(final ApiVersion version, final String hostname,
             final int portnumber, final long timeOut, final int retries)
     {
         return submitToThreadpool(() ->
@@ -343,7 +540,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
                             while (numRetries++ < retries && !Thread.interrupted()) {
                                 long timstampStart = System.currentTimeMillis();
 
-                                if (initialize(version, mode, hostname, portnumber, retryDelay)) {
+                                if (initialize(version, hostname, portnumber, retryDelay)) {
                                     break; // success, break loop
                                 } else {
                                     // Short delay before retrying
@@ -354,7 +551,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
                                     }
                                 }
 
-                                if (GazeManagerCore.IS_DEBUG_MODE)
+                                if (GazeManager.IS_DEBUG_MODE)
                                     System.out.println("activateAsync connection failed, retryDelay: " + retryDelay + ", retry num: " + numRetries);
                             }
                         } catch (InterruptedException e) {
@@ -371,7 +568,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
         });
     }
 
-    private boolean initialize(final ApiVersion version, final ClientMode mode, final String hostname,
+    private boolean initialize(final ApiVersion version, final String hostname,
             final int portnumber, final long timeOut)
     {
         isInitializing = true;
@@ -386,7 +583,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
 
             if (apiManager.connect(hostname, portnumber, timeOut))
             {
-                apiManager.requestTracker(version, mode);
+                apiManager.requestTracker(version);
                 apiManager.requestAllStates();
 
                 // We wait until above requests have been handled by
@@ -395,9 +592,6 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
 
                 if (isInitialized)
                 {
-                    if (!heartbeatHandler.isAlive())
-                        heartbeatHandler.start();
-
                     isActive = true;
 
                     // notify connection listeners
@@ -431,9 +625,6 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
     {
         isInitializing = false;
 
-        if (heartbeatHandler.isAlive())
-            heartbeatHandler.stop();
-
         if (null != apiManager)
             apiManager.close();
 
@@ -453,9 +644,6 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
             isInitializing = false;
 
             clearListeners();
-
-            if (heartbeatHandler.isAlive())
-                heartbeatHandler.stop();
 
             if (null != apiManager)
                 apiManager.close();
@@ -575,11 +763,13 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      * The EyeTribe Server defines the desired length of a heartbeat and is in this implementation automatically
      * acquired through the Tracker API.
      *
-     * @return length of a heartbeat in milliseconds
+     * @return heartbeatlength in milliseconds
+     *
+     * @deprecated as of EyeTribe Server v.0.9.77 using Heartbeat no longer has any effect
      */
     public int getHeartbeatMillis()
     {
-        return heartbeatMillis;
+        return 0;
     }
 
     /**
@@ -617,20 +807,14 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
         return version;
     }
 
-
     /**
      * If running in ClientMode.PULL, this call request the latest gaze frame from the server. Registered IGazeListener
      * instances will receive the frame.
+     * @deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default
      */
-    public void  framePull()
+    public void framePull()
     {
-        if (isActivated())
-        {
-            if(clientMode.equals(ClientMode.PULL))
-                apiManager.requestFrame();
-        }
-        else
-            System.out.println("EyeTribe Java SDK not activated!");
+        //deprecated, no effect
     }
 
     /**
@@ -1197,10 +1381,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
             if(null == threadPool)
                 threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-            synchronized (threadPool)
-            {
-                return threadPool.submit(callable);
-            }
+            return threadPool.submit(callable);
         }
         catch (RejectedExecutionException ree)
         {
@@ -1223,10 +1404,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
             if(null == threadPool)
                 threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2 +1);
 
-            synchronized (threadPool)
-            {
-                threadPool.submit(runnable);
-            }
+            threadPool.submit(runnable);
         }
         catch (RejectedExecutionException ree)
         {
@@ -1246,7 +1424,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
         {
             try
             {
-                List<Runnable> r = threadPool.shutdownNow();
+                threadPool.shutdownNow();
             }
             catch (Exception e)
             {
@@ -1268,17 +1446,6 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
 
                         if (null != tgr.values.version)
                             version = ApiVersion.fromInt(tgr.values.version);
-
-                        if (null != tgr.values.push)
-                        {
-                            if (tgr.values.push)
-                                clientMode = ClientMode.PUSH;
-                            else
-                                clientMode = ClientMode.PULL;
-                        }
-
-                        if (null != tgr.values.heartbeatInterval)
-                            heartbeatMillis = tgr.values.heartbeatInterval;
 
                         if (null != tgr.values.frameRate)
                             frameRate = FrameRate.fromInt(tgr.values.frameRate);
@@ -1347,12 +1514,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
                     } else if (response.request.compareTo(Protocol.TRACKER_REQUEST_SET) == 0) {
                         // do nothing
                     }
-                }
-                else if (response.category.compareTo(Protocol.CATEGORY_HEARTBEAT) == 0)
-                {
-                    //consume
-                }
-                else if (response.category.compareTo(Protocol.CATEGORY_CALIBRATION) == 0) {
+                } else if (response.category.compareTo(Protocol.CATEGORY_CALIBRATION) == 0) {
                     if (response.request.compareTo(Protocol.CALIBRATION_REQUEST_START) == 0) {
                         isCalibrating = true;
 
@@ -1412,7 +1574,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
                             isCalibrating = !cper.values.calibrationResult.result;
 
                             // Evaluate resample points, we decrement according to number of points needing resampling
-                            for (CalibrationResult.CalibrationPoint calibPoint : cper.values.calibrationResult.calibpoints) {
+                            for (CalibrationPoint calibPoint : cper.values.calibrationResult.calibpoints) {
                                 if (calibPoint.state == CalibrationPoint.STATE_RESAMPLE
                                         || calibPoint.state == CalibrationPoint.STATE_NO_DATA) {
                                     --sampledCalibrationPoints;
@@ -1579,10 +1741,6 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
         }
     }
 
-    abstract protected GazeApiManager createApiManager(IGazeApiResponseListener responseListener, IGazeApiConnectionListener connectionListener);
-
-    abstract protected boolean parseApiResponse(final Response response, final Request request);
-
     @Override
     public void onGazeApiConnectionStateChanged(final boolean isConnected)
     {
@@ -1593,12 +1751,16 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
         }
     }
 
+
     /**
      * Mode in witch the EyeTribe server delivers gaze data stream to the Java SDK SDK
      */
     public enum ClientMode
     {
-        PUSH(1001), PULL(1002);
+        /**@deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default*/
+        PUSH(1001),
+        /**@deprecated as of EyeTribe Server v.0.9.77 ClientMode Push is default*/
+        PULL(1002);
 
         private int clientMode;
 
@@ -1708,61 +1870,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
         }
     }
 
-    /**
-     * Class responsible for sending 'heartbeats' to the EyeTribe Server notifying that the client is alive. The
-     * EyeTribe Server defines the desired length of a heartbeat and is in this implementation automatically
-     * acquired through the EyeTribe API.
-     */
-    private class Heartbeat
-    {
-        private HeartTask task;
+    abstract protected GazeApiManager createApiManager(IGazeApiResponseListener responseListener, IGazeApiConnectionListener connectionListener);
 
-        public Heartbeat()
-        {
-        }
-
-        private synchronized void start()
-        {
-            if (isAlive())
-                stop();
-
-            Thread t = new Thread(task = new HeartTask());
-            t.start();
-        }
-
-        private synchronized void stop()
-        {
-            if (null != task && task.isAlive)
-                task.isAlive = false;
-        }
-
-        private synchronized boolean isAlive()
-        {
-            return null != task && task.isAlive;
-        }
-
-        private class HeartTask implements Runnable
-        {
-            private boolean isAlive = true;
-
-            @Override
-            public void run()
-            {
-                while (isAlive)
-                {
-                    try
-                    {
-                        if (null != apiManager && apiManager.isConnected())
-                            apiManager.requestHeartbeat();
-
-                        Thread.sleep(heartbeatMillis);
-                    }
-                    catch (Exception e)
-                    {
-                        System.out.println("Internal error while sending heartbeats");
-                    }
-                }
-            }
-        }
-    }
+    abstract protected boolean parseApiResponse(final Response response, final Request request);
 }

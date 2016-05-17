@@ -67,12 +67,11 @@ class GazeApiManager
         this.mGson = new Gson();
     }
 
-    public void requestTracker(GazeManagerCore.ApiVersion version, GazeManagerCore.ClientMode mode)
+    public void requestTracker(GazeManagerCore.ApiVersion version)
     {
         TrackerSetRequest tsr = new TrackerSetRequest();
 
         tsr.values.version = GazeManagerCore.ApiVersion.toInt(version);
-        tsr.values.push = mode.equals(GazeManagerCore.ClientMode.PUSH);
 
         tsr.id = mIdGenerator.incrementAndGet();
 
@@ -96,7 +95,6 @@ class GazeApiManager
             Protocol.TRACKER_CALIBRATIONRESULT,
             Protocol.TRACKER_FRAMERATE,
             Protocol.TRACKER_VERSION,
-            Protocol.TRACKER_MODE_PUSH
         };
 
         tgr.id = mIdGenerator.incrementAndGet();
@@ -151,15 +149,6 @@ class GazeApiManager
         tgr.id = mIdGenerator.incrementAndGet();
 
         request(tgr);
-    }
-
-    public void requestHeartbeat()
-    {
-        Request r = new Request<>(Response.class);
-
-        r.category = Protocol.CATEGORY_HEARTBEAT;
-
-        request(r);
     }
 
     public Object requestCalibrationStart(int pointcount)
@@ -245,20 +234,6 @@ class GazeApiManager
         return tsr.asyncLock;
     }
 
-    public void requestFrame()
-    {
-        TrackerGetRequest tgr = new TrackerGetRequest();
-
-        tgr.values = new String[]
-        {
-            Protocol.TRACKER_FRAME,
-        };
-
-        tgr.id = mIdGenerator.incrementAndGet();
-
-        request(tgr);
-    }
-
     public Response parseIncomingProcessResponse(JsonObject json) { return null; }
 
     public synchronized boolean connect(String host, int port, long timeOut)
@@ -337,10 +312,7 @@ class GazeApiManager
             if (null != mRequestQueue)
             {
                 cancelAllRequests();
-                synchronized (mRequestQueue)
-                {
-                    mRequestQueue.clear();
-                }
+                mRequestQueue.clear();
             }
             mRequestQueue = null;
 
@@ -368,20 +340,14 @@ class GazeApiManager
 
     protected void request(Request request)
     {
-        synchronized (mRequestQueue)
-        {
-            mRequestQueue.add(request);
-        }
+        mRequestQueue.add(request);
     }
 
     public void cancelAllRequests()
     {
-        synchronized (mRequestQueue)
+        for(Request r : mRequestQueue)
         {
-            for(Request r : mRequestQueue)
-            {
-                r.cancel();
-            }
+            r.cancel();
         }
     }
 
@@ -421,7 +387,7 @@ class GazeApiManager
                 JsonObject jo;
 
                 InputStream is = mSocket.getInputStream();
-                InputStreamReader isr = new InputStreamReader(is);
+                InputStreamReader isr = new InputStreamReader(is, "UTF-8");
                 reader = new BufferedReader(isr);
 
                 while (!Thread.interrupted())
@@ -430,7 +396,7 @@ class GazeApiManager
                     {
                         if (!responseJson.isEmpty() && null != mResponseListener)
                         {
-                            if(GazeManagerCore.IS_DEBUG_MODE)
+                            if(GazeManager.IS_DEBUG_MODE)
                                 System.out.println("IN: " + responseJson);
 
                             jo = (JsonObject) jsonParser.parse(responseJson);
@@ -468,12 +434,13 @@ class GazeApiManager
                             {
                                 //request failed
                                 response = mGson.fromJson(jo, ResponseFailed.class);
+                                response.category = ""; //we reset category to simplify parsing logic
 
                                 if(request != null)
                                     response.transitTime = System.currentTimeMillis() - request.timeStamp;
                             }
 
-                            if(GazeManagerCore.IS_DEBUG_MODE && response.transitTime != 0 )
+                            if(GazeManager.IS_DEBUG_MODE && response.transitTime != 0 )
                                 System.out.println("IN: transitTime " + response.transitTime);
 
                             mResponseListener.onGazeApiResponse(response, request);
@@ -484,8 +451,8 @@ class GazeApiManager
             catch (IOException ioe)
             {
                 // consume
-            	
-            	if(GazeManagerCore.IS_DEBUG_MODE)
+
+            	if(GazeManager.IS_DEBUG_MODE)
             	{
             		System.out.println("IncomingStreamHandler IO exception: " + ioe.getLocalizedMessage());
             		ioe.printStackTrace();
@@ -495,10 +462,7 @@ class GazeApiManager
             {
                 System.out.println("Exception while establishing incoming socket connection: " + e.getLocalizedMessage());
 
-                //connection has been lost
-                close();
-
-                if(GazeManagerCore.IS_DEBUG_MODE)
+                if(GazeManager.IS_DEBUG_MODE)
                 	e.printStackTrace();
             }
             finally
@@ -511,16 +475,19 @@ class GazeApiManager
                 {
                     // consume
                 }
+
+                //connection has been lost
+                close();
             }
 
-            if(GazeManagerCore.IS_DEBUG_MODE)
+            if(GazeManager.IS_DEBUG_MODE)
                 System.out.println("IncomingStreamHandler closing down");
         }
     }
 
     private class OutgoingStreamHandler implements Runnable
     {
-        private final int NUM_WRITE_ATTEMPTS_BEFORE_FAIL = 3;
+        private static final int NUM_WRITE_ATTEMPTS_BEFORE_FAIL = 3;
 
         private Thread runner;
 
@@ -552,7 +519,7 @@ class GazeApiManager
                 String requestJson;
 
                 OutputStream os = mSocket.getOutputStream();
-                OutputStreamWriter osw = new OutputStreamWriter(os);
+                OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
                 writer = new BufferedWriter(osw);
 
                 while (!Thread.interrupted())
@@ -575,7 +542,7 @@ class GazeApiManager
 
                             mOngoingRequests.put((Integer) request.id, request);
 
-                            if(GazeManagerCore.IS_DEBUG_MODE)
+                            if(GazeManager.IS_DEBUG_MODE)
                                 System.out.println("OUT: " + requestJson);
 
                             break;
@@ -590,7 +557,7 @@ class GazeApiManager
                                 throw new Exception("OutgoingStreamHandler failed writing to stream despite several retires");
                             }
                                
-                        	if(GazeManagerCore.IS_DEBUG_MODE)
+                        	if(GazeManager.IS_DEBUG_MODE)
                         	{
                         		System.out.println("OutgoingStreamHandler IO exception: " + ioe.getLocalizedMessage());
                         		ioe.printStackTrace();
@@ -601,9 +568,7 @@ class GazeApiManager
             }
             catch (InterruptedException e)
             {
-                // consume
-            	
-            	if(GazeManagerCore.IS_DEBUG_MODE)
+            	if(GazeManager.IS_DEBUG_MODE)
                 	System.out.println("OutgoingStreamHandler interrupted!!!");
             }
             catch (Exception e)
@@ -611,12 +576,9 @@ class GazeApiManager
                 System.out
                         .println("Exception while establishing outgoing socket connection: " + e.getLocalizedMessage());
 
-                //connection has been lost
-                close();
-
-                if(GazeManagerCore.IS_DEBUG_MODE)
+                if(GazeManager.IS_DEBUG_MODE)
                 	e.printStackTrace();
-                
+
             }
             finally
             {
@@ -632,10 +594,12 @@ class GazeApiManager
                 {
                     // consume
                 }
-                
+
+                //connection has been lost
+                close();
             }
 
-            if(GazeManagerCore.IS_DEBUG_MODE)
+            if(GazeManager.IS_DEBUG_MODE)
                 System.out.println("OutgoingStreamHandler closing down");
         }
     }

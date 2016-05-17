@@ -2,41 +2,43 @@
 
 Java SDK for the EyeTribe Dev Kit
 ====
+<p>
+
 
 This is the Java library implementation for the [EyeTribe Dev Kit](https://theeyetribe.com/products/). This reference implementation provides a Java interface for communicating with the EyeTribe Server through the open [EyeTribe API](http://dev.theeyetribe.com/api/). The library allow developers to get started quickly and focus their efforts on creating truly immersive and innovative apps using our eye tracking technology. 
 
+
 Download
 ----
-Download the [latest JAR](https://github.com/EyeTribe/tet-java-client/releases) or grab via Gradle through [JCenter](https://bintray.com/eyetribe/maven/eyetribe-java):
+Download the [latest JAR](https://search.maven.org/remote_content?g=com.theeyetribe.client&a=client&v=LATEST) or grab via Gradle:
 
-    buildscript {
-	    repositories {
-	    	jcenter()
-	    }
-    }
+    compile 'com.theeyetribe:clientsdk:0.9.77'
 
-    dependencies {
-    	compile 'com.theeyetribe:eyetribe-java:0.9.60'
-    }
+or Maven:
 
+    <dependency>
+      <groupId>com.theeyetribe</groupId>
+      <artifactId>clientsdk</artifactId>
+      <version>0.9.77</version>
+    </dependency>
 
 Documentation
 ----
-Find documentation of this library at [EyeTribe Java SDK Doc](http://eyetribe.github.io/tet-java-client). The EyeTribe API reference is found at [Eye Tribe Developer Website](http://dev.theeyetribe.com/api/).
+Find documentation of this library at [EyeTribe Java SDK Doc](http://eyetribe.github.io/tet-java-client). The EyeTribe API reference is found at our [Developer Website](http://dev.theeyetribe.com/api/).
 
 
 Samples
 ----
 An essential part of using the [EyeTribe Dev Kit](https://theeyetribe.com/products/) is 'calibrating the system'. Doing so involves creating a UI that  supports this library and guides the user through a series of mandatory steps.
 
-![Steps of the JavaFX calibration samples](jfx_sample.png)
+![Steps of the JavaFX calibration samples](http://theeyetribe.com/github/javafx_sample.png)
 
-This library holds a sample implementation of a Calibration UI using [JavaFX](docs.oracle.com/javase/8/javafx/get-started-tutorial/jfx-overview.htm). Find source code for this under [./javafx-sample](https://github.com/EyeTribe/tet-java-client/tree/master/javafx-sample) or download the prebuilt [EyeTribeJavaFx](https://github.com/EyeTribe/tet-java-client/releases). This sample runs on all platforms supported by the [EyeTribe Dev Kit](https://theeyetribe.com/products/) that have Java 8 version 65 or higher installed.
+This library holds a sample implementation of a Calibration UI using [JavaFX](docs.oracle.com/javase/8/javafx/get-started-tutorial/jfx-overview.htm). Find this under [/javafx-sample](https://github.com/EyeTribe/tet-java-client/tree/master/javafx-sample). This sample runs on all platforms supported by the [EyeTribe Dev Kit](https://theeyetribe.com/products/) that have Java 8 installed.
 
 
 Building (optional)
 ----
-A prebuilt version of the library is available under [releases](https://github.com/EyeTribe/tet-java-client/releases). The EyeTribe Java SDK is backwards compatible to Java 6. Should you wish to build it yourself, please follow the below instructions:
+You can use the prebuilt version of this library though Maven. Should you wish to build it yourselfIn case you prefer to build it yourself, 
 
 Prerequisites:
 
@@ -58,9 +60,9 @@ If you choose to build yourself and are using [Proguard](http://proguard.sourcef
 
     -keepattributes Signature, *Annotation*
     -keep class sun.misc.Unsafe { *; }
-    -keep class com.theeyetribe.clientsdk.response.* { *; }
-    -keep class com.theeyetribe.clientsdk.request.* { *; }
-    -keep class com.theeyetribe.clientsdk.data.* { *; }
+    -keep class com.theeyetribe.client.response.* { *; }
+    -keep class com.theeyetribe.client.request.* { *; }
+    -keep class com.theeyetribe.client.data.* { *; }
     -dontwarn java.lang.invoke.*
     -dontwarn com.google.**
 

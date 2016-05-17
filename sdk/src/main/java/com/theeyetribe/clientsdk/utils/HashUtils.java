@@ -17,13 +17,12 @@ public class HashUtils
 
     public static int hash(Integer value)
     {
-        long bits = Double.doubleToLongBits(value);
-        return (int) (bits ^ (bits >>> 32));
+        return value.intValue();
     }
 
     public static int hash(Long value)
     {
-        return value.intValue();
+        return (int)(value ^ (value >>> 32));
     }
 
     public static int hash(Float value)
@@ -34,6 +33,6 @@ public class HashUtils
     public static int hash(Double value)
     {
         long bits = Double.doubleToLongBits(value);
-        return (int) (bits ^ (bits >>> 32));
+        return hash(bits);
     }
 }

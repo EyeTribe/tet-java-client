@@ -236,6 +236,7 @@ public class SceneCalibrationController extends SceneController implements ICali
             mCalibrationSequence.play();
         }
     }
+
     public void resetCalibration()
     {
         stopCalibration();

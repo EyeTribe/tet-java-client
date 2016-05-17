@@ -20,7 +20,7 @@ import com.theeyetribe.clientsdk.data.CalibrationResult;
  */
 public class CalibrationPointEndResponse extends Response
 {
-    public class Values
+    public static class Values
     {
         @SerializedName(Protocol.CALIBRATION_CALIBRESULT)
         public CalibrationResult calibrationResult;

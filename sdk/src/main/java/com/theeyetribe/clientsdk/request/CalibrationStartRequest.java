@@ -18,7 +18,7 @@ import com.theeyetribe.clientsdk.response.Response;
  */
 public class CalibrationStartRequest extends Request<Response>
 {
-    public class Values
+    public static class Values
     {
         public Integer pointcount;
     }

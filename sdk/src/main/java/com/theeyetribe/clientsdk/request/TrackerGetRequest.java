@@ -60,7 +60,10 @@ public class TrackerGetRequest extends Request<TrackerGetResponse>
                     && !tgr.values.frame.timeStampString.isEmpty()) {
                 Date date;
                 try {
-                    date = sdf.parse(tgr.values.frame.timeStampString);
+                    synchronized (sdf)
+                    {
+                        date = sdf.parse(tgr.values.frame.timeStampString);
+                    }
                     tgr.values.frame.timeStamp = date.getTime(); // UTC
                 } catch (Exception e) {
                     // consume error
