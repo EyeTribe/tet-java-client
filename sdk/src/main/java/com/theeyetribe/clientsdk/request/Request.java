@@ -11,6 +11,7 @@ package com.theeyetribe.clientsdk.request;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.theeyetribe.clientsdk.GazeManager;
+import com.theeyetribe.clientsdk.utils.HashUtils;
 
 /**
  * Request is the generic base class for requests in the EyeTribe API
@@ -89,6 +90,16 @@ public class Request<T> implements Comparable<Request<T>>
         return category.equals(other.category) &&
                 request.equals(other.request) &&
                 id == other.id;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 1471;
+        hash = hash * 1151  + category.hashCode();
+        hash = hash * 1151  + request.hashCode();
+        hash = hash * 1151  + HashUtils.hash(id);
+        return hash;
     }
 
     @Override

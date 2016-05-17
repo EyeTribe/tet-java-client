@@ -57,26 +57,31 @@ public class JavaFxCalibUtils extends CalibUtils
         return getCalibString(bundle, getCalibQuality(result));
     }
 
-    protected List<Point2D> initCalibrationPoints(int rows, int columns, Region region)
+    public static List<Point2D> initCalibrationPoints(int rows, int columns, Region region)
     {
         return initCalibrationPoints(rows, columns, region, 0, 0, true);
     }
 
-    protected List<Point2D> initCalibrationPoints(int rows, int columns, Region region, boolean shuffle)
+    public static List<Point2D> initCalibrationPoints(int rows, int columns, Region region, boolean shuffle)
     {
         return initCalibrationPoints(rows, columns, region, 0, 0, shuffle);
     }
 
-    protected List<Point2D> initCalibrationPoints(int rows, int columns, Region region, double paddingHors, double paddingVert)
+    public static List<Point2D> initCalibrationPoints(int rows, int columns, Region region, double paddingHors, double paddingVert)
     {
         return initCalibrationPoints(rows, columns, region, paddingHors, paddingVert, true);
     }
 
-    protected List<Point2D> initCalibrationPoints(int rows, int columns, @Nonnull Region region, double paddingHors, double paddingVert, boolean shuffle)
+    public static List<Point2D> initCalibrationPoints(int rows, int columns, @Nonnull Region region, double paddingHors, double paddingVert, boolean shuffle)
     {
         if(null == region)
             throw new IllegalArgumentException("Region cannot be null!");
 
-        return initCalibrationPoints(rows, columns, (int)Math.round(region.getWidth()), (int)Math.round(region.getHeight()), paddingHors, paddingVert, shuffle);
+        return initCalibrationPoints(rows, columns, region.getWidth(), region.getHeight(), paddingHors, paddingVert, shuffle);
+    }
+
+    public static List<Point2D> initCalibrationPoints(int rows, int columns, double width, double height, double paddingHors, double paddingVert, boolean shuffle)
+    {
+        return CalibUtils.initCalibrationPoints(rows, columns, (int)Math.round(width), (int)Math.round(height), (float)paddingHors, (float)paddingVert, shuffle);
     }
 }

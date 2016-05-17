@@ -2,13 +2,13 @@
 
 buildscript {
     repositories {
-        mavenCentral()
         jcenter()
     }
 
     dependencies {
-        classpath 'me.tatarka:gradle-retrolambda:3.2.3'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+        classpath 'me.tatarka:gradle-retrolambda:3.2.5'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+        classpath 'com.google.code.findbugs:jsr305:3.0.1'
     }
 }
 
@@ -19,5 +19,5 @@ allprojects {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.9'
+    gradleVersion = '2.13'
 }

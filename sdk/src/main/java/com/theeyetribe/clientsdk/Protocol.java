@@ -31,12 +31,12 @@ public class Protocol
 
     public static final String CATEGORY_TRACKER = "tracker";
     public static final String CATEGORY_CALIBRATION = "calibration";
-    public static final String CATEGORY_HEARTBEAT = "heartbeat";
+    //public static final String CATEGORY_HEARTBEAT = "heartbeat"; //deprecated
 
     public static final String TRACKER_REQUEST_SET = "set";
     public static final String TRACKER_REQUEST_GET = "get";
-    public static final String TRACKER_MODE_PUSH = "push";
-    public static final String TRACKER_HEARTBEATINTERVAL = "heartbeatinterval";
+    //public static final String TRACKER_MODE_PUSH = "push"; //deprecated
+    //public static final String TRACKER_HEARTBEATINTERVAL = "heartbeatinterval"; //deprecated
     public static final String TRACKER_VERSION = "version";
     public static final String TRACKER_ISCALIBRATED = "iscalibrated";
     public static final String TRACKER_ISCALIBRATING = "iscalibrating";

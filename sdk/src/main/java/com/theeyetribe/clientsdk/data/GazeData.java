@@ -48,13 +48,13 @@ public class GazeData
      */
     public static final int STATE_TRACKING_LOST = 1 << 4;
 
-    public Integer state = 0;
+    public int state = 0;
 
     @SerializedName(Protocol.FRAME_TIME)
-    public Long timeStamp = 0l;
+    public long timeStamp = 0l;
 
     @SerializedName(Protocol.FRAME_TIMESTAMP)
-    public String timeStampString;
+    public String timeStampString = "";
 
     @SerializedName(Protocol.FRAME_RAW_COORDINATES)
     public Point2D rawCoordinates = new Point2D();
@@ -69,7 +69,7 @@ public class GazeData
     public Eye rightEye = new Eye();
 
     @SerializedName(Protocol.FRAME_FIXATION)
-    public Boolean isFixated = false;
+    public boolean isFixated = false;
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
@@ -78,7 +78,10 @@ public class GazeData
         timeStamp = System.currentTimeMillis();
 
         Date date = new Date(timeStamp);
-        timeStampString = sdf.format(date);
+        synchronized (sdf)
+        {
+            timeStampString = sdf.format(date);
+        }
     }
 
     public GazeData(GazeData other)
@@ -93,7 +96,7 @@ public class GazeData
         this.leftEye = new Eye(other.leftEye);
         this.rightEye = new Eye(other.rightEye);
 
-        this.isFixated = other.isFixated;
+        this.isFixated = Boolean.valueOf(other.isFixated);
     }
 
     @Override
@@ -103,13 +106,13 @@ public class GazeData
         {
             GazeData other = (GazeData) o;
 
-            return this.state.intValue() == other.state.intValue()
-                    && this.timeStamp.longValue() == other.timeStamp.longValue()
-                    && this.timeStampString.equals(other.timeStampString)
-                    && this.rawCoordinates.equals(other.rawCoordinates)
-                    && this.smoothedCoordinates.equals(other.smoothedCoordinates) && this.leftEye.equals(other.leftEye)
-                    && this.rightEye.equals(other.rightEye)
-                    && this.isFixated.booleanValue() == other.isFixated.booleanValue();
+            return
+                this.rawCoordinates.equals(other.rawCoordinates) &&
+                this.smoothedCoordinates.equals(other.smoothedCoordinates) &&
+                this.leftEye.equals(other.leftEye) &&
+                this.rightEye.equals(other.rightEye) &&
+                this.state == other.state &&
+                this.isFixated == other.isFixated;
         }
 
         return false;
@@ -119,13 +122,11 @@ public class GazeData
     public int hashCode()
     {
         int hash = 2039;
-        hash = hash * 1553 + HashUtils.hash(state);
-        hash = hash * 1553 + HashUtils.hash(timeStamp);
-        hash = hash * 1553 + timeStampString.hashCode();
         hash = hash * 1553 + rawCoordinates.hashCode();
         hash = hash * 1553 + smoothedCoordinates.hashCode();
         hash = hash * 1553 + leftEye.hashCode();
         hash = hash * 1553 + rightEye.hashCode();
+        hash = hash * 1553 + HashUtils.hash(state);
         hash = hash * 1553 + HashUtils.hash(isFixated);
         return hash;
     }
@@ -142,7 +143,7 @@ public class GazeData
         this.leftEye = new Eye(other.leftEye);
         this.rightEye = new Eye(other.rightEye);
 
-        this.isFixated = other.isFixated;
+        this.isFixated = Boolean.valueOf(other.isFixated);
     }
 
     public String stateToString()
@@ -156,7 +157,7 @@ public class GazeData
             ticker = true;
         }
 
-        if ((STATE_TRACKING_GAZE & state) != 0)
+        if ((STATE_TRACKING_EYES & state) != 0)
         {
             stateString += (ticker ? " | " : "") + "STATE_TRACKING_EYES";
             ticker = true;
@@ -183,7 +184,7 @@ public class GazeData
         return stateString;
     }
 
-    private final int NO_TRACKING_MASK = STATE_TRACKING_LOST | STATE_TRACKING_FAIL;
+    private static final int NO_TRACKING_MASK = STATE_TRACKING_LOST | STATE_TRACKING_FAIL;
 
     public boolean hasSmoothedGazeCoordinates()
     {
@@ -198,7 +199,7 @@ public class GazeData
     /**
      * Contains tracking results of a single eye.
      */
-    public class Eye
+    public static class Eye
     {
         @SerializedName(Protocol.FRAME_RAW_COORDINATES)
         public Point2D rawCoordinates = new Point2D();
@@ -210,7 +211,7 @@ public class GazeData
         public Point2D pupilCenterCoordinates = new Point2D();
 
         @SerializedName(Protocol.FRAME_EYE_PUPIL_SIZE)
-        public Double pupilSize = 0d;
+        public float pupilSize = 0f;
 
         public Eye()
         {
@@ -221,7 +222,7 @@ public class GazeData
             this.rawCoordinates = new Point2D(other.rawCoordinates);
             this.smoothedCoordinates = new Point2D(other.smoothedCoordinates);
             this.pupilCenterCoordinates = new Point2D(other.pupilCenterCoordinates);
-            this.pupilSize = other.pupilSize;
+            this.pupilSize = new Float(other.pupilSize);
         }
 
         @Override
@@ -231,10 +232,11 @@ public class GazeData
             {
                 Eye other = (Eye) o;
 
-                return this.rawCoordinates.equals(other.rawCoordinates)
-                        && this.smoothedCoordinates.equals(other.smoothedCoordinates)
-                        && this.pupilCenterCoordinates.equals(other.pupilCenterCoordinates)
-                        && Double.doubleToLongBits(this.pupilSize) == Double.doubleToLongBits(other.pupilSize);
+                return
+                    this.rawCoordinates.equals(other.rawCoordinates) &&
+                    this.smoothedCoordinates.equals(other.smoothedCoordinates) &&
+                    this.pupilCenterCoordinates.equals(other.pupilCenterCoordinates) &&
+                    Float.compare(this.pupilSize, other.pupilSize) == 0;
             }
 
             return false;

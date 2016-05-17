@@ -11,22 +11,22 @@ package com.theeyetribe.clientsdk.data;
 import com.theeyetribe.clientsdk.utils.HashUtils;
 
 /**
- * 2D point with double precision used for gaze control routines
+ * 2D point with float precision used for gaze control routines
  */
 public class Point2D
 {
-    public double x;
-    public double y;
+    public float x;
+    public float y;
+
+    public static final float EPSILON = 1e-005f;
 
     public static final Point2D ZERO = new Point2D();
 
     public Point2D()
     {
-        x = 0;
-        y = 0;
     }
 
-    public Point2D(double x, double y)
+    public Point2D(float x, float y)
     {
         this.x = x;
         this.y = y;
@@ -49,8 +49,9 @@ public class Point2D
 
         Point2D other = (Point2D) o;
 
-        return Double.doubleToLongBits(x) == Double.doubleToLongBits(other.x)
-                && Double.doubleToLongBits(y) == Double.doubleToLongBits(other.y);
+        return
+            Float.compare(this.x, other.x) == 0 &&
+            Float.compare(this.y, other.y) == 0 ;
     }
 
     @Override
@@ -77,17 +78,17 @@ public class Point2D
         return new Point2D(this.x * p2.x, this.y * p2.y);
     }
 
-    public Point2D multiply(double k)
+    public Point2D multiply(float k)
     {
         return new Point2D(this.x * k, this.y * k);
     }
 
-    public Point2D divide(double k)
+    public Point2D divide(float k)
     {
         return new Point2D(this.x / k, this.y / k);
     }
 
-    public double average()
+    public float average()
     {
         return (x + y) / 2;
     }

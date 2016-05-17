@@ -18,7 +18,7 @@ import com.theeyetribe.clientsdk.Protocol;
  */
 public class ResponseFailed extends Response
 {
-    public class Values
+    public static class Values
     {
         @SerializedName(Protocol.KEY_STATUSMESSAGE)
         public String statusMessage;

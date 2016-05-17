@@ -27,30 +27,30 @@ public class CalibrationResult
     /*
      * Was the calibration successful?
      */
-    public Boolean result = false;
+    public boolean result = false;
 
     /*
      * Average error in degrees
      */
     @SerializedName(Protocol.CALIBRESULT_AVERAGE_ERROR_DEGREES)
-    public Double averageErrorDegree = 0d;
+    public float averageErrorDegree = 0f;
 
     /*
      * Average error in degrees, left eye
      */
     @SerializedName(Protocol.CALIBRESULT_AVERAGE_ERROR_LEFT_DEGREES)
-    public Double averageErrorDegreeLeft = 0d;
+    public float averageErrorDegreeLeft = 0f;
 
     /*
      * Average error in degrees, right eye
      */
     @SerializedName(Protocol.CALIBRESULT_AVERAGE_ERROR_RIGHT_DEGREES)
-    public Double averageErrorDegreeRight = 0d;
+    public float averageErrorDegreeRight = 0f;
 
     /*
      * Complete list of calibration points
      */
-    public CalibrationPoint[] calibpoints;
+    public CalibrationPoint[] calibpoints = new CalibrationPoint[]{};
 
     @Override
     public boolean equals(Object o)
@@ -63,13 +63,12 @@ public class CalibrationResult
 
         CalibrationResult other = (CalibrationResult) o;
 
-        return result == other.result
-                && Double.doubleToLongBits(averageErrorDegree) == Double.doubleToLongBits(other.averageErrorDegree)
-                && Double.doubleToLongBits(averageErrorDegreeLeft) == Double
-                        .doubleToLongBits(other.averageErrorDegreeLeft)
-                && Double.doubleToLongBits(averageErrorDegreeRight) == Double
-                        .doubleToLongBits(other.averageErrorDegreeRight)
-                && Arrays.equals(calibpoints, other.calibpoints);
+        return
+            this.result == other.result &&
+            Float.compare(this.averageErrorDegree, other.averageErrorDegree) == 0 &&
+            Float.compare(this.averageErrorDegreeLeft, other.averageErrorDegreeLeft) == 0 &&
+            Float.compare(this.averageErrorDegreeRight, other.averageErrorDegreeRight) == 0 &&
+            Arrays.equals(this.calibpoints, other.calibpoints);
     }
 
     @Override
@@ -89,7 +88,7 @@ public class CalibrationResult
         return hash;
     }
 
-    public class CalibrationPoint
+    public static class CalibrationPoint
     {
         /*
          * State defines that no data is available for calibration point
@@ -107,7 +106,7 @@ public class CalibrationResult
         /*
          * State of calib point
          */
-        public Integer state = 0;
+        public int state = 0;
 
         /*
          * Coordinates in pixels
@@ -141,9 +140,13 @@ public class CalibrationResult
 
             CalibrationPoint other = (CalibrationPoint) o;
 
-            return state.equals(other.state) && coordinates.equals(other.coordinates)
-                    && meanEstimatedCoords.equals(other.meanEstimatedCoords) && accuracy.equals(other.accuracy)
-                    && meanError.equals(other.meanError) && standardDeviation.equals(other.standardDeviation);
+            return
+                this.state == other.state &&
+                this.coordinates.equals(other.coordinates) &&
+                this.meanEstimatedCoords.equals(other.meanEstimatedCoords) &&
+                this.accuracy.equals(other.accuracy) &&
+                this.meanError.equals(other.meanError) &&
+                this.standardDeviation.equals(other.standardDeviation);
         }
 
         @Override
@@ -163,25 +166,25 @@ public class CalibrationResult
     /**
      * Accuracy holds detailed information about calibration accuracy in degrees
      */
-    public class Accuracy
+    public static class Accuracy
     {
         /*
          * Accuracy in degrees
          */
         @SerializedName(Protocol.CALIBRESULT_ACCURACY_AVERAGE_DEGREES)
-        public Double accuracyDegrees = 0d;
+        public float accuracyDegrees = 0f;
 
         /*
          * Accuracy in degrees, left eye
          */
         @SerializedName(Protocol.CALIBRESULT_ACCURACY_LEFT_DEGREES)
-        public Double accuracyDegreesLeft = 0d;
+        public float accuracyDegreesLeft = 0f;
 
         /*
          * Accuracy in degrees, right eye
          */
         @SerializedName(Protocol.CALIBRESULT_ACCURACY_RIGHT_DEGREES)
-        public Double accuracyDegreesRight = 0d;
+        public float accuracyDegreesRight = 0f;
 
         @Override
         public boolean equals(Object o)
@@ -194,11 +197,10 @@ public class CalibrationResult
 
             Accuracy other = (Accuracy) o;
 
-            return Double.doubleToLongBits(accuracyDegrees) == Double.doubleToLongBits(other.accuracyDegrees)
-                    && Double.doubleToLongBits(accuracyDegreesLeft) == Double
-                            .doubleToLongBits(other.accuracyDegreesLeft)
-                    && Double.doubleToLongBits(accuracyDegreesRight) == Double
-                            .doubleToLongBits(other.accuracyDegreesRight);
+            return
+                Float.compare(this.accuracyDegrees, other.accuracyDegrees) == 0 &&
+                Float.compare(this.accuracyDegreesLeft, other.accuracyDegreesLeft) == 0 &&
+                Float.compare(this.accuracyDegreesRight, other.accuracyDegreesRight) == 0;
         }
 
         @Override
@@ -215,25 +217,25 @@ public class CalibrationResult
     /**
      * MeanError holds detailed information about calibration mean error in pixels
      */
-    public class MeanError
+    public static class MeanError
     {
         /*
          * Mean error in pixels
          */
         @SerializedName(Protocol.CALIBRESULT_MEAN_ERROR_AVERAGE_PIXELS)
-        public Double meanErrorPixels = 0d;
+        public float meanErrorPixels = 0f;
 
         /*
          * Mean error in pixels, left eye
          */
         @SerializedName(Protocol.CALIBRESULT_MEAN_ERROR_LEFT_PIXELS)
-        public Double meanErrorPixelsLeft = 0d;
+        public float meanErrorPixelsLeft = 0f;
 
         /*
          * Mean error in pixels, right eye
          */
         @SerializedName(Protocol.CALIBRESULT_MEAN_ERROR_RIGHT_PIXELS)
-        public Double meanErrorPixelsRight = 0d;
+        public float meanErrorPixelsRight = 0f;
 
         @Override
         public boolean equals(Object o)
@@ -246,11 +248,10 @@ public class CalibrationResult
 
             MeanError other = (MeanError) o;
 
-            return Double.doubleToLongBits(meanErrorPixels) == Double.doubleToLongBits(other.meanErrorPixels)
-                    && Double.doubleToLongBits(meanErrorPixelsLeft) == Double
-                            .doubleToLongBits(other.meanErrorPixelsLeft)
-                    && Double.doubleToLongBits(meanErrorPixelsRight) == Double
-                            .doubleToLongBits(other.meanErrorPixelsRight);
+            return
+                Float.compare(this.meanErrorPixels, other.meanErrorPixels) == 0 &&
+                Float.compare(this.meanErrorPixelsLeft, other.meanErrorPixelsLeft) == 0 &&
+                Float.compare(this.meanErrorPixelsRight, other.meanErrorPixelsRight) == 0;
         }
 
         @Override
@@ -267,25 +268,25 @@ public class CalibrationResult
     /**
      * StandardDeviation holds detailed information about calibration standard deviation in pixels
      */
-    public class StandardDeviation
+    public static class StandardDeviation
     {
         /*
          * Average std deviation in pixels
          */
         @SerializedName(Protocol.CALIBRESULT_STANDARD_DEVIATION_AVERAGE_PIXELS)
-        public Double averageStandardDeviationPixels = 0d;
+        public float averageStandardDeviationPixels = 0f;
 
         /*
          * Average std deviation in pixels, left eye
          */
         @SerializedName(Protocol.CALIBRESULT_STANDARD_DEVIATION_LEFT_PIXELS)
-        public Double averageStandardDeviationPixelsLeft = 0d;
+        public float averageStandardDeviationPixelsLeft = 0f;
 
         /*
          * Average std deviation in pixels, right eye
          */
         @SerializedName(Protocol.CALIBRESULT_STANDARD_DEVIATION_RIGHT_PIXELS)
-        public Double averageStandardDeviationPixelsRight = 0d;
+        public float averageStandardDeviationPixelsRight = 0f;
 
         @Override
         public boolean equals(Object o)
@@ -298,12 +299,10 @@ public class CalibrationResult
 
             StandardDeviation other = (StandardDeviation) o;
 
-            return Double.doubleToLongBits(averageStandardDeviationPixels) == Double
-                    .doubleToLongBits(other.averageStandardDeviationPixels)
-                    && Double.doubleToLongBits(averageStandardDeviationPixelsLeft) == Double
-                            .doubleToLongBits(other.averageStandardDeviationPixelsLeft)
-                    && Double.doubleToLongBits(averageStandardDeviationPixelsRight) == Double
-                            .doubleToLongBits(other.averageStandardDeviationPixelsRight);
+            return
+                Float.compare(this.averageStandardDeviationPixels, other.averageStandardDeviationPixels) == 0 &&
+                Float.compare(this.averageStandardDeviationPixelsLeft, other.averageStandardDeviationPixelsLeft) == 0 &&
+                Float.compare(this.averageStandardDeviationPixelsRight, other.averageStandardDeviationPixelsRight) == 0;
         }
 
         @Override

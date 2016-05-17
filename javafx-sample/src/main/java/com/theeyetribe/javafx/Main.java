@@ -124,8 +124,8 @@ public class Main extends Application implements IGazeListener
         root.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                dragDelta.x = event.getSceneX();
-                dragDelta.y = event.getSceneY();
+                dragDelta.x = (float)event.getSceneX();
+                dragDelta.y = (float)event.getSceneY();
             }
         });
         root.setOnMouseDragged(new EventHandler<MouseEvent>() {

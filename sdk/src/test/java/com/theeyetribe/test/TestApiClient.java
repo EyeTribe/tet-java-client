@@ -31,10 +31,14 @@ public class TestApiClient {
     {
         Gson gson = new Gson();
 
+        Random r = new Random();
+
         GazeData gd = new GazeData();
-        gd.leftEye.pupilSize = 11.1d;
-        gd.rightEye.pupilCenterCoordinates.x = 800.13d;
+        gd.leftEye.pupilSize = 11.1f;
+        gd.rightEye.pupilCenterCoordinates.x = 800.13f;
         gd.state = 1;
+        gd.rightEye.pupilCenterCoordinates = new Point2D(r.nextFloat(), r.nextFloat());
+        gd.leftEye.rawCoordinates = new Point2D(r.nextFloat(), r.nextFloat());
 
         Assert.assertNotNull(gd.state);
         Assert.assertTrue(!gd.hasRawGazeCoordinates());
@@ -52,11 +56,11 @@ public class TestApiClient {
         Gson gson = new Gson();
 
         CalibrationResult cr = new CalibrationResult();
-        cr.averageErrorDegree = 11.1d;
-        cr.averageErrorDegreeRight = 800.13d;
-        CalibrationPoint cp = cr.new CalibrationPoint();
-        cp.standardDeviation.averageStandardDeviationPixelsLeft = 123.123d;
-        cp.coordinates = new Point2D(321.123d, 432.234d);
+        cr.averageErrorDegree = 11.1f;
+        cr.averageErrorDegreeRight = 800.13f;
+        CalibrationPoint cp = new CalibrationResult.CalibrationPoint();
+        cp.standardDeviation.averageStandardDeviationPixelsLeft = 123.123f;
+        cp.coordinates = new Point2D(321.123f, 432.234f);
         cr.calibpoints = new CalibrationPoint[]{cp};
 
         String json = gson.toJson(cr);
@@ -165,8 +169,6 @@ public class TestApiClient {
         deactivateServer();
     }
 
-
-
     @Test
     public void testCalibrationStart() throws Exception
     {
@@ -219,33 +221,6 @@ public class TestApiClient {
 
         Assert.assertFalse(GazeManager.getInstance().hasGazeListener(listener));
         GazeManager.getInstance().addGazeListener(listener);
-
-        lock.await(2, TimeUnit.SECONDS);
-
-        Assert.assertTrue(GazeManager.getInstance().hasGazeListener(listener));
-        Assert.assertTrue(GazeManager.getInstance().getNumGazeListeners() == 1);
-
-        Assert.assertTrue(listener.hasRecievedGazeData);
-
-        deactivateServer();
-    }
-
-    @Test
-    public void testGazeDataPull() throws Exception
-    {
-        Future<Boolean> future = GazeManager.getInstance().activateAsync(
-                GazeManager.ApiVersion.VERSION_1_0,
-                GazeManager.ClientMode.PULL
-        );
-        Assert.assertNotNull(future);
-        Assert.assertTrue(future.get(5, TimeUnit.SECONDS));
-
-        final TestListener listener = new TestListener();
-
-        Assert.assertFalse(GazeManager.getInstance().hasGazeListener(listener));
-        GazeManager.getInstance().addGazeListener(listener);
-
-        GazeManager.getInstance().framePull();
 
         lock.await(2, TimeUnit.SECONDS);
 
@@ -545,7 +520,8 @@ public class TestApiClient {
             if(!hasRecievedConnecitonStateChange)
                 hasRecievedConnecitonStateChange = true;
 
-            //System.out.println("Thread: " + Thread.currentThread().getName() + ", onConnectionStateChanged: " + isConnected);
+            if(GazeManager.IS_DEBUG_MODE)
+                System.out.println("Thread: " + Thread.currentThread().getName() + ", onConnectionStateChanged: " + isConnected);
         }
 
         @Override
@@ -554,7 +530,8 @@ public class TestApiClient {
             if(!hasRecievedTrackerStateChange)
                 hasRecievedTrackerStateChange = true;
 
-            //System.out.println("Thread: " + Thread.currentThread().getName() + ", onTrackerStateChanged: " + trackerState);
+            if(GazeManager.IS_DEBUG_MODE)
+                System.out.println("Thread: " + Thread.currentThread().getName() + ", onTrackerStateChanged: " + trackerState);
         }
 
         @Override
@@ -565,7 +542,8 @@ public class TestApiClient {
             if(!hasRecievedScreenStateChange)
                 hasRecievedScreenStateChange = true;
 
-            //System.out.println("Thread: " + Thread.currentThread().getName() + ", OnScreenStatesChanged: " + screenIndex + ", " + screenResolutionWidth + ", " + screenResolutionHeight + ", " + screenPhysicalWidth + ", " + screenPhysicalHeight);
+            if(GazeManager.IS_DEBUG_MODE)
+                System.out.println("Thread: " + Thread.currentThread().getName() + ", OnScreenStatesChanged: " + screenIndex + ", " + screenResolutionWidth + ", " + screenResolutionHeight + ", " + screenPhysicalWidth + ", " + screenPhysicalHeight);
         }
 
         @Override
@@ -575,7 +553,8 @@ public class TestApiClient {
             if(!hasRecievedCalibrationStateChange)
                 hasRecievedCalibrationStateChange = true;
 
-            //System.out.println("Thread: " + Thread.currentThread().getName() + ", onCalibrationChanged: " + isCalibrated + ", " + calibResult.toString());
+            if(GazeManager.IS_DEBUG_MODE)
+                System.out.println("Thread: " + Thread.currentThread().getName() + ", onCalibrationChanged: " + isCalibrated + ", " + calibResult.toString());
         }
 
         @Override
@@ -584,7 +563,8 @@ public class TestApiClient {
             if(!hasRecievedGazeData)
                 hasRecievedGazeData = true;
 
-            //System.out.println("Thread: " + Thread.currentThread().getName() + ", onGazeUpdate: " + gazeData.toString());
+            if(GazeManager.IS_DEBUG_MODE)
+                System.out.println("Thread: " + Thread.currentThread().getName() + ", onGazeUpdate: " + gazeData.toString());
         }
     }
 

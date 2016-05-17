@@ -21,11 +21,8 @@ import com.theeyetribe.clientsdk.data.GazeData;
  */
 public class TrackerGetResponse extends Response
 {
-    public class Values
+    public static class Values
     {
-        public Boolean push;
-        @SerializedName(Protocol.TRACKER_HEARTBEATINTERVAL)
-        public Integer heartbeatInterval;
         @SerializedName(Protocol.TRACKER_VERSION)
         public Integer version;
         @SerializedName(Protocol.TRACKER_ISCALIBRATING)
