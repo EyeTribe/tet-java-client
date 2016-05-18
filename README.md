@@ -10,7 +10,7 @@ This is the Java library implementation for the [EyeTribe Dev Kit](https://theey
 
 Download
 ----
-Download the [latest JAR](https://search.maven.org/remote_content?g=com.theeyetribe.client&a=client&v=LATEST) or grab via Gradle:
+Download the [latest JAR](https://bintray.com/eyetribe/maven/eyetribe-java/_latestVersion) or grab via Gradle:
 
     compile 'com.theeyetribe:clientsdk:0.9.77'
 
