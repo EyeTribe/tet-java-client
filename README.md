@@ -12,15 +12,28 @@ Download
 ----
 Download the [latest JAR](https://bintray.com/eyetribe/maven/eyetribe-java/_latestVersion) or grab via Gradle:
 
-    compile 'com.theeyetribe:clientsdk:0.9.77'
+    compile 'com.theeyetribe:eyetribe-java:0.9.77'
 
 or Maven:
 
     <dependency>
       <groupId>com.theeyetribe</groupId>
-      <artifactId>clientsdk</artifactId>
+      <artifactId>eyetribe-java</artifactId>
       <version>0.9.77</version>
     </dependency>
+
+and if you did not yet configure the jcenter repository:
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray</id>
+            <name>bintray</name>
+            <url>http://jcenter.bintray.com</url>
+        </repository>
+    </repositories>
 
 Documentation
 ----
