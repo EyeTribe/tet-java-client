@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/eyetribe-java.iml" filepath="$PROJECT_DIR$/.idea/modules/eyetribe-java.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/eyetribe-java_main.iml" filepath="$PROJECT_DIR$/.idea/modules/eyetribe-java_main.iml" group="eyetribe-java" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/eyetribe-java_test.iml" filepath="$PROJECT_DIR$/.idea/modules/eyetribe-java_test.iml" group="eyetribe-java" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/javafx-sample/javafx-sample.iml" filepath="$PROJECT_DIR$/.idea/modules/javafx-sample/javafx-sample.iml" group="javafx-sample" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/javafx-sample/javafx-sample_main.iml" filepath="$PROJECT_DIR$/.idea/modules/javafx-sample/javafx-sample_main.iml" group="javafx-sample" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/javafx-sample/javafx-sample_package.iml" filepath="$PROJECT_DIR$/.idea/modules/javafx-sample/javafx-sample_package.iml" group="javafx-sample" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/javafx-sample/javafx-sample_test.iml" filepath="$PROJECT_DIR$/.idea/modules/javafx-sample/javafx-sample_test.iml" group="javafx-sample" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sdk/sdk.iml" filepath="$PROJECT_DIR$/.idea/modules/sdk/sdk.iml" group="sdk" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sdk/sdk_main.iml" filepath="$PROJECT_DIR$/.idea/modules/sdk/sdk_main.iml" group="sdk" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sdk/sdk_test.iml" filepath="$PROJECT_DIR$/.idea/modules/sdk/sdk_test.iml" group="sdk" />
+    </modules>
+  </component>
+</project>
