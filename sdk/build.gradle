@@ -7,7 +7,7 @@ apply plugin: 'findbugs'
 def props = new Properties()
 props.load(new FileInputStream("${rootDir}/eyetribe.properties"))
 props.each { key, val ->
-    project.set(key, val)
+    project.ext.set(key, val)
 }
 
 group = 'com.theeyetribe'
