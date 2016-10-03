@@ -67,7 +67,7 @@ This library holds a sample implementation of a Calibration UI using [JavaFX](do
 
 Building (optional)
 ----
-You can use the prebuilt version of this library though Maven. Should you wish to build it yourselfIn case you prefer to build it yourself, 
+You can use the prebuilt version of this library though Gradle or Maven. See the JavaFX sample of this repo for an example of doing so. Should you wish to build it yourself follow the below instructions 
 
 Prerequisites:
 
