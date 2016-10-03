@@ -10,17 +10,46 @@ This is the Java library implementation for the [EyeTribe Dev Kit](https://theey
 
 Download
 ----
-Download the [latest JAR](https://bintray.com/eyetribe/maven/eyetribe-java/_latestVersion) or grab via Gradle:
+Download the [latest JAR](https://bintray.com/eyetribe/maven/eyetribe-java/_latestVersion) or via one of the following package services.
 
-    compile 'com.theeyetribe:clientsdk:0.9.77'
+**Gradle**
 
-or Maven:
+Make sure your project is set up to use [Bintray](https://bintray.com/bintray/jcenter "BinTray JCenter") by adding the following to the project level *build.gradle* file.
+
+	apply plugin: 'java'
+	buildscript {
+    	repositories {
+        	jcenter()
+    	}
+	}
+
+ Then grab the EyeTribe Java SDK package from any module.
+
+    compile 'com.theeyetribe:eyetribe-java:0.9.77'
+
+**Maven**
+
+Make sure your project is configured to use [Bintray](https://bintray.com/bintray/jcenter "BinTray JCenter") repository:
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray</id>
+            <name>bintray</name>
+            <url>http://jcenter.bintray.com</url>
+        </repository>
+    </repositories>
+
+Then add the EyeTribe Java SDK dependency
 
     <dependency>
       <groupId>com.theeyetribe</groupId>
-      <artifactId>clientsdk</artifactId>
+      <artifactId>eyetribe-java</artifactId>
       <version>0.9.77</version>
     </dependency>
+
 
 Documentation
 ----
