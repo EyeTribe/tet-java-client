@@ -10,19 +10,26 @@ This is the Java library implementation for the [EyeTribe Dev Kit](https://theey
 
 Download
 ----
-Download the [latest JAR](https://bintray.com/eyetribe/maven/eyetribe-java/_latestVersion) or grab via Gradle:
+Download the [latest JAR](https://bintray.com/eyetribe/maven/eyetribe-java/_latestVersion) or via one of the following package services.
+
+**Gradle**
+
+Make sure your project is set up to use [Bintray](https://bintray.com/bintray/jcenter "BinTray JCenter") by adding the following to the project level *build.gradle* file.
+
+	apply plugin: 'java'
+	buildscript {
+    	repositories {
+        	jcenter()
+    	}
+	}
+
+ Then grab the EyeTribe Java SDK package from any module.
 
     compile 'com.theeyetribe:eyetribe-java:0.9.77'
 
-or Maven:
+**Maven**
 
-    <dependency>
-      <groupId>com.theeyetribe</groupId>
-      <artifactId>eyetribe-java</artifactId>
-      <version>0.9.77</version>
-    </dependency>
-
-and if you did not yet configure the jcenter repository:
+Make sure your project is configured to use [Bintray](https://bintray.com/bintray/jcenter "BinTray JCenter") repository:
 
     <repositories>
         <repository>
@@ -34,6 +41,15 @@ and if you did not yet configure the jcenter repository:
             <url>http://jcenter.bintray.com</url>
         </repository>
     </repositories>
+
+Then add the EyeTribe Java SDK dependency
+
+    <dependency>
+      <groupId>com.theeyetribe</groupId>
+      <artifactId>eyetribe-java</artifactId>
+      <version>0.9.77</version>
+    </dependency>
+
 
 Documentation
 ----
@@ -51,7 +67,7 @@ This library holds a sample implementation of a Calibration UI using [JavaFX](do
 
 Building (optional)
 ----
-You can use the prebuilt version of this library though Maven. Should you wish to build it yourselfIn case you prefer to build it yourself, 
+You can use the prebuilt version of this library though Gradle or Maven. See the JavaFX sample of this repo for an example of doing so. Should you wish to build it yourself follow the below instructions 
 
 Prerequisites:
 

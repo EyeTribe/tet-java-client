@@ -1,6 +1,7 @@
 *.class
 *.jar
 build/
+classes/
 demcopile/
 .gradle/
 .idea/

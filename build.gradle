@@ -13,11 +13,19 @@ buildscript {
 }
 
 allprojects {
+
+    apply plugin: 'java'
+
     repositories {
         jcenter()
+    }
+
+    dependencies {
+        compile 'com.google.code.findbugs:jsr305:3.0.1'
+        compile 'org.jetbrains:annotations:13.0' //Use legacy version to ensure Java 6 support
     }
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.13'
+    gradleVersion = '2.14.1'
 }

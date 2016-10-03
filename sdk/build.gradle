@@ -7,7 +7,7 @@ apply plugin: 'findbugs'
 def props = new Properties()
 props.load(new FileInputStream("${rootDir}/eyetribe.properties"))
 props.each { key, val ->
-    project.set(key, val)
+    project.ext.set(key, val)
 }
 
 group = 'com.theeyetribe'
@@ -20,7 +20,6 @@ def id = 'eyetribe-java'
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
     compile 'com.google.code.gson:gson:2.5'
-    compile 'org.jetbrains:annotations:13.0' //Use legacy version to ensure Java 6 support
 }
 
 retrolambda {
