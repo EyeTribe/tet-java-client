@@ -135,7 +135,7 @@ public class TestApiClient {
 
         deactivateServer();
     }
-
+    
     @Test
     public void testActivateAsyncRetry() throws Exception
     {
@@ -257,13 +257,15 @@ public class TestApiClient {
 
             lock.await(1, TimeUnit.SECONDS);
 
-            GazeManager.getInstance().calibrationStartAsync(9, null).get(5, TimeUnit.SECONDS);
-            GazeManager.getInstance().calibrationAbortAsync().get(5, TimeUnit.SECONDS);
+            Assert.assertTrue(GazeManager.getInstance().calibrationStartAsync(9, null).get(5, TimeUnit.SECONDS));
+            Assert.assertTrue(GazeManager.getInstance().calibrationAbortAsync().get(5, TimeUnit.SECONDS));
 
             lock.await(1, TimeUnit.SECONDS);
 
             GazeManager.getInstance().deactivate();
+
             lock.await(1, TimeUnit.SECONDS);
+
             Assert.assertFalse(GazeManager.getInstance().isActivated());
         }
 
