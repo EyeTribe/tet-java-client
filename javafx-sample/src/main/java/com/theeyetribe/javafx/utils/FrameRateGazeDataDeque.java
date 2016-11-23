@@ -15,6 +15,13 @@ import com.theeyetribe.clientsdk.data.GazeData;
  */
 public class FrameRateGazeDataDeque extends GazeDataDeque
 {
+    private static final long BUFFER_SIZE_MILLIS = 5000;
+
+    public FrameRateGazeDataDeque()
+    {
+        super(BUFFER_SIZE_MILLIS);
+    }
+
     public FrameRateGazeDataDeque(long timeLimit)
     {
         super(timeLimit);
@@ -24,7 +31,7 @@ public class FrameRateGazeDataDeque extends GazeDataDeque
     {
         float avgMillis;
         if((avgMillis = getAvgMillisFrame()) > 0 )
-            return (float)1000/avgMillis;
+            return 1000f / avgMillis;
 
         return -1;
     }
@@ -37,7 +44,10 @@ public class FrameRateGazeDataDeque extends GazeDataDeque
         if(null != first && null != last)
         {
             float delta = first.timeStamp - last.timeStamp;
-            return delta / size();
+
+            // only return value when buffer populated
+            if (delta > (timeLimit >> 1))
+                return delta / size();
         }
 
         return -1;

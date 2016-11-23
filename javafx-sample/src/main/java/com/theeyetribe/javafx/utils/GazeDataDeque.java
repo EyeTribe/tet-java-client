@@ -25,7 +25,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class GazeDataDeque extends LinkedBlockingDeque<GazeData>
 {
     private static final long serialVersionUID = -7224237939138791310L;
-    private long timeLimit;
+    protected long timeLimit;
     
     public GazeDataDeque(long timeLimit)
     {
