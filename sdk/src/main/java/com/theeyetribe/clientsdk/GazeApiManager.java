@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 class GazeApiManager
 {
-    static String DEFAULT_SERVER_HOST = "localhost";
+    static String DEFAULT_SERVER_HOST = "127.0.0.1";
     static int DEFAULT_SERVER_PORT = 6555;
 
     private Socket mSocket;
@@ -250,6 +250,7 @@ class GazeApiManager
             // connect to socket, with timeout
             mSocket = new Socket();
             mSocket.connect(new InetSocketAddress(host, port), (int) timeOut);
+            mSocket.setKeepAlive(true);
             mSocket.setSoTimeout((int) timeOut);
 
             // notify connection change
@@ -605,7 +606,7 @@ class GazeApiManager
     }
 
     /**
-     * Callback interface responsible for handling messages returned from the GazeApiManager
+     * Callback interface responsible for handling responses returned from the GazeApiManager
      */
     protected interface IGazeApiResponseListener
     {
