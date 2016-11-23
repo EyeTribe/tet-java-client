@@ -8,8 +8,6 @@
 
 package com.theeyetribe.clientsdk;
 
-import com.theeyetribe.clientsdk.GazeApiManager.IGazeApiConnectionListener;
-import com.theeyetribe.clientsdk.GazeApiManager.IGazeApiResponseListener;
 import com.theeyetribe.clientsdk.data.CalibrationResult;
 import com.theeyetribe.clientsdk.data.CalibrationResult.CalibrationPoint;
 import com.theeyetribe.clientsdk.data.GazeData;
@@ -18,6 +16,8 @@ import com.theeyetribe.clientsdk.response.CalibrationPointEndResponse;
 import com.theeyetribe.clientsdk.response.Response;
 import com.theeyetribe.clientsdk.response.ResponseFailed;
 import com.theeyetribe.clientsdk.response.TrackerGetResponse;
+import com.theeyetribe.clientsdk.GazeApiManager.IGazeApiResponseListener;
+import com.theeyetribe.clientsdk.GazeApiManager.IGazeApiConnectionListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,6 +77,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
         mTrackerStateListeners = Collections.synchronizedList(new ArrayList<>());
         mScreenStateListeners = Collections.synchronizedList(new ArrayList<>());
         mConnectionStateListeners = Collections.synchronizedList(new ArrayList<>());
+        resetEnums();
     }
 
     /**
@@ -649,6 +650,8 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
                 apiManager.close();
 
             shutDownThreadpool();
+
+            resetEnums();
 
             isInitialized = false;
             isActive = false;
@@ -1753,7 +1756,7 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
 
 
     /**
-     * Mode in witch the EyeTribe server delivers gaze data stream to the Java SDK SDK
+     * Mode in witch the EyeTribe server delivers gaze data stream
      */
     public enum ClientMode
     {
@@ -1771,11 +1774,16 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
     }
 
     /**
-     * Version of the EyeTribe API to be compliant to
+     * The EyeTribe API compliance levels
      */
     public enum ApiVersion
     {
-        VERSION_1_0(1);
+        /**
+         * ApiVersion is undefined. GazeManager not activated
+         */
+        VERSION_UNDEFINED(0),
+        VERSION_1_0(1),
+        ;
 
         private int version;
 
@@ -1807,8 +1815,31 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
      */
     public enum TrackerState
     {
-        TRACKER_CONNECTED(0), TRACKER_NOT_CONNECTED(1), TRACKER_CONNECTED_BADFW(2), TRACKER_CONNECTED_NOUSB3(3), TRACKER_CONNECTED_NOSTREAM(
-                4);
+        /**
+         * Tracker device is detected and working
+         */
+        TRACKER_CONNECTED(0),
+        /**
+         * Tracker device is not detected
+         */
+        TRACKER_NOT_CONNECTED(1),
+        /**
+         * Tracker device is detected but not working due to wrong/unsupported firmware
+         */
+        TRACKER_CONNECTED_BADFW(2),
+        /**
+         * Tracker device is detected but not working due to unsupported USB host
+         */
+        TRACKER_CONNECTED_NOUSB3(3),
+        /**
+         * Tracker device is detected but not working due to no stream could be received
+         */
+        TRACKER_CONNECTED_NOSTREAM(4),
+        /**
+         * Tracker state is undefined. GazeManager not activated
+         */
+        TRACKER_UNDEFINED(-1),
+        ;
 
         private int trackerState;
 
@@ -1839,10 +1870,17 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
     }
 
     /**
-     * The current state of the connected TrackerDevice.
+     * The possible frame rates of the EyeTribe Server
      */
-    public enum FrameRate {
-        FPS_30(30), FPS_60(60);
+    public enum FrameRate
+    {
+        /**
+         * FrameRate is undefined. GazeManager not activated
+         */
+        FPS_UNDEFINED(0),
+        FPS_30(30),
+        FPS_60(60),
+        ;
 
         private int frameRate;
 
@@ -1868,6 +1906,13 @@ abstract class GazeManagerCore implements IGazeApiResponseListener, IGazeApiConn
             else
                 return 0;
         }
+    }
+
+    private void resetEnums()
+    {
+        trackerState = TrackerState.TRACKER_UNDEFINED;
+        frameRate = FrameRate.FPS_UNDEFINED;
+        version = ApiVersion.VERSION_UNDEFINED;
     }
 
     abstract protected GazeApiManager createApiManager(IGazeApiResponseListener responseListener, IGazeApiConnectionListener connectionListener);
