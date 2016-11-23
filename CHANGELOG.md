@@ -1,6 +1,12 @@
 # Change Log #
 ---
 
+Version 0.9.77.1 (2016-11-23)
+---
+- Default states for all GazeManager enum types
+- Fixed default network state
+- Update Gradle version & dependencies
+
 Version 0.9.77 (2016-05-17)
 ---
 - Moving all data types from 64-bit to 32-bit floating point precision
